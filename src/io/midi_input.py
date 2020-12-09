@@ -32,7 +32,7 @@ class MidiInput():
     default_port = 0                # default midi device port
     default_tempo = 120             # BPM (beats per minute)
     default_beat_resolution = 480   # PPQ (ticks per beat)
-    midi_file_cache = '../output/last_recording.mid'
+    midi_file_cache = '../output/recording_cache.mid'
 
 
     def __init__(self, port_id = default_port, tempo = default_tempo, beat_resolution = default_beat_resolution):
@@ -79,11 +79,41 @@ class MidiInput():
 
     def midoRecordUntilRest(self, max_rest_in_seconds = 2):
         """
+        Records MIDI input until no message arrives for a specified amounts of seconds (default = 2)
+
         Returns:
             PrettyMIDI object if recording was successful.
             None if recording failed or no input was recorded.
         """
 
+        midi, track, init_datetime = self.__init_recording()
+        last_event_datetime = init_datetime
+
+        while (datetime.now() - last_event_datetime).total_seconds() < max_rest_in_seconds:
+            try:
+                track, last_event_datetime = self.__record_message(track, last_event_datetime)
+            except ConnectionError:
+                return None
+
+        return self.__save_and_return_recording(midi)
+
+
+
+
+    ### INTERNAL RECORD FUNCTIONS ###
+
+    def __init_recording(self):
+        """
+        Creates midi object, creates and appends track.
+        Sets tempo and beat resolution.
+        Registers the time when recording started.
+
+        Returns:
+            ( midi object,
+              track object,
+              init_datetime )
+
+        """
         # create file and track, set tempo and beat resolution
         midi = mido.MidiFile(type=0, ticks_per_beat=self.beat_resolution)
         track = mido.MidiTrack()
@@ -91,70 +121,75 @@ class MidiInput():
         track.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(self.tempo)))
 
         # init timing
-        last_event_datetime = datetime.now()
+        init_datetime = datetime.now()
 
         # tell user that recording started
         print('IO: NOW RECORDING ...')
 
-        while (datetime.now() - last_event_datetime).total_seconds() < max_rest_in_seconds:
-            
-            # check if port still exists
-            if self.port.name not in mido.get_input_names():
-                print('Error: MIDI device {0} disconnected.'.format(self.port.name))
-                self.close_port()
-                return None
-
-            # listen for incoming message
-            try:
-                msg = self.port.receive(block=False)
-            except AttributeError:
-                print('Error: No Input Port defined')
-                return None
-            except IOError as error:
-                print('Error: MIDI device disconnected - ' + str(error))
-                self.close_port()
-                return None
-
-            # add time ticks to msg and append to track
-            if msg is not None:
-                event_datetime = datetime.now()
-                delta_time_in_seconds = (event_datetime - last_event_datetime).total_seconds()
-                msg.time = int(mido.second2tick(delta_time_in_seconds, self.beat_resolution, mido.bpm2tempo(self.tempo)))
-                last_event_datetime = event_datetime
-
-                track.append(msg)
-
-                # live output pitches of note_on events while recording
-                if msg.type == 'note_on':
-                    print(msg.note, end=' ')
+        return midi, track, init_datetime
 
 
-        if midi.length > 0:
-            midi.save(self.midi_file_cache)
-            pm = pretty_midi.PrettyMIDI(self.midi_file_cache)
-            print('IO: recording successful.')
-            return pm
-        else:
+    def __record_message(self, track, last_event_datetime):
+        """
+        Listens to port and records a single MIDI message.
+        Adds delta time in ticks to recorded MIDI message
+
+        Returns:
+            MIDI message
+
+        Raises:
+            ConncetionError: If port is undefined no longer available
+        """
+        # check if port still exists
+        if self.port.name not in mido.get_input_names():
+            print('Error: MIDI device {0} disconnected.'.format(self.port.name))
+            self.close_port()
+            raise ConnectionError
+
+        # listen for incoming message
+        try:
+            msg = self.port.receive(block=False)
+        except AttributeError:
+            print('Error: No Input Port defined')
+            raise ConnectionError
+        except IOError as error:
+            print('Error: MIDI device disconnected - ' + str(error))
+            self.close_port()
+            raise ConnectionError
+
+        # add time ticks to msg and append to track
+        if msg is not None:
+            event_datetime = datetime.now()
+            delta_time_in_seconds = (event_datetime - last_event_datetime).total_seconds()
+            msg.time = int(mido.second2tick(delta_time_in_seconds, self.beat_resolution, mido.bpm2tempo(self.tempo)))
+            last_event_datetime = event_datetime
+
+            track.append(msg)
+
+            # live output pitches of note_on events while recording
+            if msg.type == 'note_on':
+                print(msg.note, end=' ')
+        
+        return  track, last_event_datetime
+
+
+    def __save_and_return_recording(self, midi):
+        """
+        Checks if messages where recorded and converts midi to pretty_midi
+        
+        Returns:
+            PrettyMIDI object if midi data was recorded.
+            None if midi is empty.
+        """
+        if midi.length <= 0:
             print('IO: nothing was recorded.')
             return None
 
-
-    def __init_recording(self):
-        """
-        docstring
-        """
-        pass
-
-    def __record_message(self):
-        """
-        docstring
-        """
-        pass
-
-    def __save_and_return_recording(self):
-        """
-        docstring
-        """
-        pass
+        midi.save(self.midi_file_cache)
+        pm = pretty_midi.PrettyMIDI(self.midi_file_cache)
+        print('\nIO: recording successful.')
+        return pm
+        
+        
 
     
