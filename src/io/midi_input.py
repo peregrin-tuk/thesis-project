@@ -32,6 +32,7 @@ class MidiInput():
     default_port = 0                # default midi device port
     default_tempo = 120             # BPM (beats per minute)
     default_beat_resolution = 480   # PPQ (ticks per beat)
+    midi_file_cache = '../output/last_recording.mid'
 
 
     def __init__(self, port_id = default_port, tempo = default_tempo, beat_resolution = default_beat_resolution):
@@ -129,8 +130,8 @@ class MidiInput():
 
 
         if midi.length > 0:
-            midi.save('./output/last_recording.mid')
-            pm = pretty_midi.PrettyMIDI('./output/last_recording.mid')
+            midi.save(self.midi_file_cache)
+            pm = pretty_midi.PrettyMIDI(self.midi_file_cache)
             print('IO: recording successful.')
             return pm
         else:
