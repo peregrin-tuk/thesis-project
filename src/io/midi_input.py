@@ -28,21 +28,29 @@ import pretty_midi
 
 
 class MidiInput():
+    """
+    docstring
+    """
+
     used_ports = []
     default_port = 0                # default midi device port
-    default_tempo = 120             # BPM (beats per minute)
-    default_beat_resolution = 480   # PPQ (ticks per beat)
+    default_tempo = 120             # beats per minute (BPM) // MIDI uses QPM (quarters per minute)
+    default_beat_resolution = 480   # ticks per beat (= PPQ if time signature = x/4)
+    default_time_signature = (4, 4)
     midi_file_cache = '../output/recording_cache.mid'
 
 
-    def __init__(self, port_id = default_port, tempo = default_tempo, beat_resolution = default_beat_resolution):
+    def __init__(self, port_id = default_port, tempo = default_tempo, beat_resolution = default_beat_resolution, time_signature = default_time_signature):
         self.tempo = tempo
         self.beat_resolution = beat_resolution
+        self.time_signature = time_signature
         self.open_port(port_id)
+
 
 
     def __del__(self):
         self.close_port()
+
 
 
     ### OPEN & CLOSE INPUT PORT ###
@@ -64,6 +72,7 @@ class MidiInput():
                 print('IO: "{0}" connected as input port'.format(str(self.port.name)))
 
 
+
     def close_port(self):
         try:
             self.port.close()
@@ -73,11 +82,10 @@ class MidiInput():
             pass
 
 
+
     ### RECORD ###
 
-    # Abbruchbedingung: funktion die true zurückgibt, wenns weiterlaufen soll und false zum abbrechen (oder umgekehrt)
-
-    def midoRecordUntilRest(self, max_rest_in_seconds = 2):
+    def recordUntilRest(self, max_rest_in_seconds = 2):
         """
         Records MIDI input until no message arrives for a specified amounts of seconds (default = 2)
 
@@ -91,7 +99,7 @@ class MidiInput():
 
         while (datetime.now() - last_event_datetime).total_seconds() < max_rest_in_seconds:
             try:
-                track, last_event_datetime = self.__record_message(track, last_event_datetime)
+                track, _, last_event_datetime = self.__record_message(track, last_event_datetime)
             except ConnectionError:
                 return None
 
@@ -99,8 +107,70 @@ class MidiInput():
 
 
 
+    def recordBars(self, number_of_bars):
+        """
+        Records for a specified number of bars. The length of one bar is calculted by the internal tempo and time signature attributes.
 
-    ### INTERNAL RECORD FUNCTIONS ###
+        Returns:
+            PrettyMIDI object if recording was successful.
+            None if recording failed or no input was recorded.
+        """
+
+        length = number_of_bars * self.length_of_bar_in_seconds()
+
+        midi, track, init_datetime = self.__init_recording()
+        last_event_datetime = init_datetime
+
+        while (datetime.now() - init_datetime).total_seconds() < length:
+            try:
+                track, _, last_event_datetime = self.__record_message(track, last_event_datetime)
+            except ConnectionError:
+                return None
+
+        return self.__save_and_return_recording(midi)
+
+    
+
+    def recordNotes(self, number_of_notes):
+        """
+        Records a specified number of notes. One note = note_on + note_off event
+
+        Returns:
+            PrettyMIDI object if recording was successful.
+            None if recording failed or no input was recorded.
+        """
+
+        midi, track, init_datetime = self.__init_recording()
+        last_event_datetime = init_datetime
+
+        note_off_count = 0
+        note_on_count = 0
+
+        while note_off_count < number_of_notes:
+            try:
+                track, msg, last_event_datetime = self.__record_message(track, last_event_datetime)
+            except ConnectionError:
+                return None
+            else:
+                if msg is not None:
+                    if msg.type == 'note_off':
+                        print('note off event')
+                        note_off_count += 1
+                    else:
+                        note_on_count += 1
+
+        # clean up midi: remove note_on events without corresponding note_off
+        if note_on_count != note_off_count:
+            on_events = [msg for msg in track if msg.type == 'note_on']
+            for msg in on_events:
+                if not any(c.type == 'note_off' and c.note == msg.note for c in track[track.index(msg):]):
+                    track.remove(msg)
+
+        return self.__save_and_return_recording(midi)
+
+
+
+    ### INTERNAL RECORDING METHODS ###
 
     def __init_recording(self):
         """
@@ -119,6 +189,7 @@ class MidiInput():
         track = mido.MidiTrack()
         midi.tracks.append(track)
         track.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(self.tempo)))
+        track.append(mido.MetaMessage('time_signature', numerator=self.time_signature[0], denominator=self.time_signature[1]))
 
         # init timing
         init_datetime = datetime.now()
@@ -127,6 +198,7 @@ class MidiInput():
         print('IO: NOW RECORDING ...')
 
         return midi, track, init_datetime
+
 
 
     def __record_message(self, track, last_event_datetime):
@@ -170,7 +242,8 @@ class MidiInput():
             if msg.type == 'note_on':
                 print(msg.note, end=' ')
         
-        return  track, last_event_datetime
+        return  track, msg, last_event_datetime
+
 
 
     def __save_and_return_recording(self, midi):
@@ -189,7 +262,15 @@ class MidiInput():
         pm = pretty_midi.PrettyMIDI(self.midi_file_cache)
         print('\nIO: recording successful.')
         return pm
-        
-        
 
-    
+
+
+    ### UTILITY ###
+    def length_of_bar_in_seconds(self):
+        """
+        Calculates the duration of one bar based on set tempo and time signature
+
+        Returns:
+            float: length of one bar in seconds
+        """
+        return 60.0/self.tempo * self.time_signature[0]
