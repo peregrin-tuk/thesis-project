@@ -27,3 +27,52 @@
 
 
 # maybe also add scheduled playAudio and sendMidi functions
+
+from IPython.display import display, Audio, FileLink
+from pretty_midi import PrettyMIDI
+from visual_midi import Plotter
+
+
+def pianoRoll(midi: PrettyMIDI):
+    """
+    docstring
+    """
+    plotter = Plotter(show_velocity=True)
+    plotter.show_notebook(midi)
+
+
+def pianoRollToHTML(midi: PrettyMIDI, html_file_path: str):
+    """
+    docstring
+    """
+    plotter = Plotter()
+    plotter.show(midi, html_file_path)
+
+
+def synthesizeMidi(midi: PrettyMIDI):
+    """
+    docstring
+    """
+    if midi is not None:
+        display(Audio(midi.fluidsynth(fs=16000), rate=16000))
+    else:
+        print('IO: Output error: The midi object is empty.')
+
+
+def saveMidiFile(midi: PrettyMIDI, file_path: str):
+    """
+    docstring
+    """
+    midi.write(file_path)
+    print('IO: file saved to:')
+    showFileLink(file_path)
+
+
+def showFileLink(file_path: str):
+    """
+    docstring
+    """
+    try:
+        display(FileLink(file_path))
+    except TypeError:
+        print('IO: Output error: The path must be a string')

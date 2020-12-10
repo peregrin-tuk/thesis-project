@@ -212,11 +212,6 @@ class MidiInput():
         Raises:
             ConncetionError: If port is undefined no longer available
         """
-        # check if port still exists
-        if self.port.name not in mido.get_input_names():
-            print('Error: MIDI device {0} disconnected.'.format(self.port.name))
-            self.close_port()
-            raise ConnectionError
 
         # listen for incoming message
         try:
@@ -226,6 +221,12 @@ class MidiInput():
             raise ConnectionError
         except IOError as error:
             print('Error: MIDI device disconnected - ' + str(error))
+            self.close_port()
+            raise ConnectionError
+
+        # check if port still exists
+        if self.port.name not in mido.get_input_names():
+            print('Error: MIDI device {0} disconnected.'.format(self.port.name))
             self.close_port()
             raise ConnectionError
 
