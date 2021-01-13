@@ -9,16 +9,16 @@
 # midi_output_port
 
 # FUNCTIONS FILE OUTPUT ( exports )
-# exportMIDI(internal midi datastructure, string: path = default, string: file_name)
+# ✔ exportMIDI(internal midi datastructure, string: path = default, string: file_name)
     #  if path == undefined, use default path (but then default path must ALWAYS be defined - e.g. in constructor of output class)
 # exportOTHERTYPE etc.
 
 # FUNCTIONS LIVE OUTPUT
-# playMIDI(data, instrument = default, volume = default)   
+# ✔ playMIDI(data, instrument = default, volume = default)   
     #  // should that maybe go to midi class OR midi_output analogue to midi_input ?
     #  rename to playAudio(mididata) and also provide playAudio(audiodata) ?
     #  playPureMidi() & playExpressiveMidi ?  => now only implement pure, but expressive would be interesting for Call-Response output
-# showPianoRoll(data, settings?)
+# ✔ showPianoRoll(data, settings?)
     #  // using bokeeh or magenta output
 # showMetaData()
     #  for testing and evaluation
@@ -56,7 +56,7 @@ def synthesizeMidi(midi: PrettyMIDI):
     if midi is not None:
         display(Audio(midi.fluidsynth(fs=16000), rate=16000))
     else:
-        print('IO: Output error: The midi object is empty.')
+        print('[IO] Output error: The midi object is empty.')
 
 
 def saveMidiFile(midi: PrettyMIDI, file_path: str):
@@ -64,7 +64,7 @@ def saveMidiFile(midi: PrettyMIDI, file_path: str):
     docstring
     """
     midi.write(file_path)
-    print('IO: file saved to:')
+    print('[IO] file saved to:')
     showFileLink(file_path)
 
 
@@ -75,4 +75,4 @@ def showFileLink(file_path: str):
     try:
         display(FileLink(file_path))
     except TypeError:
-        print('IO: Output error: The path must be a string')
+        print('[IO] Output error: The path must be a string')

@@ -1,1 +1,1 @@
-from src.io.midi_input import MidiInput
+from src.io.record_midi import MidiInput

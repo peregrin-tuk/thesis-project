@@ -1,24 +1,23 @@
 # class MidiInput
 
-# Global varibles:
-# default port ✔
-# signature (enum - 4/4, 3/4, ..) - wird erst später verwendet
-# tempo (int bpm) - wird erst später verwendet ✔
-# => those two can be used to record a specific number of bars + play a click metronom for the user
+# Global variables:
+# ✔ default port 
+# ✔ signature (enum - 4/4, 3/4, ..)
+# ✔ tempo (int bpm)
+#    => those two can be used to record a specific number of bars + play a click metronom for the user
 
 # FUNCTIONS
-# abstract? record (record function only differentiate in their break condition)
+# ✔ abstract? record (record function only differentiate in their break condition)
 # recordSeconds(int: length in ms)
-    # output: "ready to record"
-    # recording starts when first note is pressed
-# recordBars(int: length in bars)
-# recordUntilRest(optional: int: rest length in ms)
-    # if no open note_on event exists + no new event incoming for X ms -> stop recording
+        # output: "ready to record"
+        # recording starts when first note is pressed
+# ✔ recordBars(int: length in bars)
+# ✔ recordUntilRest(optional: int: rest length in ms)
+        # if no open note_on event exists + no new event incoming for X ms -> stop recording
 # recordUntilStopped()
-    # records until stopRecording() is called -> could be the general record() function, so all other recordings could also bes stopped
-    # should other recordings be able to be stopped? canceled yes, but stopping and saving the recording midway might lead to unexpected behaviour
-
-# recordSingleNote()
+        # records until stopRecording() is called -> could be the general record() function, so all other recordings could also bes stopped
+        # should other recordings be able to be stopped? canceled yes, but stopping and saving the recording midway might lead to unexpected behaviour
+# ✔ recordSingleNote()
 # cancelRecording()
 # playNote() ? (als callback um input zu hören, sollte dann synthesize_input = true/false an init übergeben können)
 
@@ -69,7 +68,7 @@ class MidiInput():
                 print('Available input ports: ' + str(mido.get_input_names()))
             else:
                 self.used_ports.append(port_id)
-                print('IO: "{0}" connected as input port'.format(str(self.port.name)))
+                print('[IO] "{0}" connected as input port'.format(str(self.port.name)))
 
 
 
@@ -77,7 +76,7 @@ class MidiInput():
         try:
             self.port.close()
             self.used_ports.remove(self.port_id)
-            print('IO: Input port "{0}" closed.'.format(str(mido.get_input_names()[self.port_id])))
+            print('[IO] Input port "{0}" closed.'.format(str(mido.get_input_names()[self.port_id])))
         except:
             pass
 
@@ -154,7 +153,6 @@ class MidiInput():
             else:
                 if msg is not None:
                     if msg.type == 'note_off':
-                        print('note off event')
                         note_off_count += 1
                     else:
                         note_on_count += 1
@@ -195,7 +193,7 @@ class MidiInput():
         init_datetime = datetime.now()
 
         # tell user that recording started
-        print('IO: NOW RECORDING ...')
+        print('[IO] NOW RECORDING ...')
 
         return midi, track, init_datetime
 
@@ -256,12 +254,12 @@ class MidiInput():
             None if midi is empty.
         """
         if midi.length <= 0:
-            print('IO: nothing was recorded.')
+            print('[IO] nothing was recorded.')
             return None
 
         midi.save(self.midi_file_cache)
         pm = pretty_midi.PrettyMIDI(self.midi_file_cache)
-        print('\nIO: recording successful.')
+        print('\n[IO] recording successful.')
         return pm
 
 
