@@ -194,6 +194,7 @@ class MidiInput():
 
         # tell user that recording started
         print('[IO] NOW RECORDING ...')
+        print('[REC]', end=' ')
 
         return midi, track, init_datetime
 
