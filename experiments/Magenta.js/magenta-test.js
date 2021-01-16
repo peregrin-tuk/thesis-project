@@ -1,4 +1,4 @@
-const sequence = SOPHISTICATED_LADY
+const sequence = TWINKLE_HALF
 const length = 16
 const temperature = 1.1
 
