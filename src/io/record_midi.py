@@ -36,7 +36,7 @@ class MidiInput():
     default_tempo = 120             # beats per minute (BPM) // MIDI uses QPM (quarters per minute)
     default_beat_resolution = 480   # ticks per beat (= PPQ if time signature = x/4)
     default_time_signature = (4, 4)
-    midi_file_cache = '../output/recording_cache.mid'
+    midi_file_cache = '../midi/recording_cache.mid'
     start_on_note = True
 
 
