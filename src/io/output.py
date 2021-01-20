@@ -28,9 +28,13 @@
 
 # maybe also add scheduled playAudio and sendMidi functions
 
+from typing import List
+
 from IPython.display import display, Audio, FileLink
 from pretty_midi import PrettyMIDI
-from visual_midi import Plotter
+from visual_midi import Plotter, Preset
+from note_seq import NoteSequence, note_sequence_to_pretty_midi
+
 
 
 def pianoRoll(midi: PrettyMIDI):
@@ -39,6 +43,28 @@ def pianoRoll(midi: PrettyMIDI):
     """
     plotter = Plotter(show_velocity=True)
     plotter.show_notebook(midi)
+
+
+def pianoRollFromNoteSeq(note_seq: NoteSequence):
+    """
+    docstring
+    """
+    pm = note_sequence_to_pretty_midi(note_seq)
+    pianoRoll(pm)
+
+
+def pianoRollGrid(midis: List[PrettyMIDI]):
+    preset = Preset(plot_width=500, plot_height=300)
+    for midi in midis:
+        plotter = Plotter(preset, show_velocity=True)
+        plotter.show_notebook(midi)
+
+
+def pianoRollGridFromNoteSeq(note_seqs: List[NoteSequence]):
+    pms = []
+    for note_seq in note_seqs:
+        pms.append(note_sequence_to_pretty_midi(note_seq))
+    pianoRollGrid(pms)
 
 
 def pianoRollToHTML(midi: PrettyMIDI, html_file_path: str):

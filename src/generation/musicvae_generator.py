@@ -1,4 +1,5 @@
 import itertools
+import time
 from enum import Enum
 from magenta.models.music_vae import configs
 from magenta.models.music_vae.trained_model import TrainedModel
@@ -23,24 +24,47 @@ class MusicVAEGenerator(AbstractGenerator):
 
     def __init__(self, checkpoint=Checkpoint.MEL_2BAR, batch_size=4):
         super().__init__()
+
         print("[GEN] Initializing Music VAE with checkpoint '" +
-              Checkpoint[checkpoint].name + "'...")
+              checkpoint.name + "'...")
+
+        t1 = time.time()
         self.checkpoint = checkpoint
         self.model = TrainedModel(
-            configs.CONFIG_MAP[Checkpoint[checkpoint].name],
+            configs.CONFIG_MAP[str(checkpoint.name)],
             batch_size=batch_size,
-            checkpoint_dir_or_path=AbstractGenerator.base_path + '/vae/' + Checkpoint[checkpoint].name + '.ckpt')
-        print('[GEN] 🎉 Initialization finished!')
+            checkpoint_dir_or_path=AbstractGenerator.models_base_path + '/vae/' + checkpoint.name + '.tar')
+        t2 = time.time()
+        
+        print('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
 
 
-    def generate(self, length=8, temperature=1.0, amount=1):
+    def generate(self, length_in_quarters=8, temperature=0.4):
+        t1 = time.time()
         generated_sequence = self.model.sample(
-            n=amount, length=length, temperature=temperature)
+            n=1, length=length_in_quarters*4, temperature=temperature)
+        t2 = time.time()
 
         return {
-            'note_seq': generated_sequence,
+            'sequence': generated_sequence[0],
             'meta': {
-                'gen_dur': 0,
+                'gen_dur': t2-t1,
+		        'model': 'MusicVAE',
+		        'checkpoint': self.checkpoint.name,
+		        'temperature':temperature	
+            }
+        }
+
+    def generateMultiple(self, number=10, length_in_quarters=8, temperature=0.4):
+        t1 = time.time()
+        generated_sequence = self.model.sample(
+            n=number, length=length_in_quarters*4, temperature=temperature)
+        t2 = time.time()
+
+        return {
+            'sequences': generated_sequence,
+            'meta': {
+                'gen_dur': t2-t1,
 		        'model': 'MusicVAE',
 		        'checkpoint': self.checkpoint.name,
 		        'temperature':temperature	

@@ -37,6 +37,7 @@ class MidiInput():
     default_beat_resolution = 480   # ticks per beat (= PPQ if time signature = x/4)
     default_time_signature = (4, 4)
     midi_file_cache = '../output/recording_cache.mid'
+    start_on_note = True
 
 
     def __init__(self, port_id = default_port, tempo = default_tempo, beat_resolution = default_beat_resolution, time_signature = default_time_signature):
