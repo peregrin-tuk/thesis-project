@@ -93,6 +93,15 @@ def saveMidiFile(midi: PrettyMIDI, file_path: str):
     print('[IO] file saved to:')
     showFileLink(file_path)
 
+def saveNoteSeqToMidiFile(note_seq: NoteSequence, file_path: str):
+    """
+    docstring
+    """
+    midi = note_sequence_to_pretty_midi(note_seq)
+    midi.write(file_path)
+    print('[IO] file saved to:')
+    showFileLink(file_path)
+
 
 def showFileLink(file_path: str):
     """

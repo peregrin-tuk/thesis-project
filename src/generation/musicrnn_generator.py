@@ -4,7 +4,7 @@ from enum import Enum
 from magenta.models.melody_rnn import melody_rnn_sequence_generator
 from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
-from note_seq import NoteSequence
+from note_seq import NoteSequence, extract_subsequence
 from . import AbstractGenerator
 
 _CHECKPOINTS = {
@@ -41,8 +41,9 @@ class MusicRNNGenerator(AbstractGenerator):
 
     def generate(self, primer_sequence=NoteSequence(), length_in_quarters=16, temperature=0.4):
         t1 = time.time()
-        generator_options = self.__setupGeneratorOptions(primer_sequence, length_in_quarters, temperature)
+        generator_options, start, end = self.__setupGeneratorOptions(primer_sequence, length_in_quarters, temperature)
         generated_sequence = self.model.generate(primer_sequence, generator_options)
+        generated_sequence = extract_subsequence(generated_sequence, start, end)
         t2 = time.time()
 
         return {
@@ -58,10 +59,11 @@ class MusicRNNGenerator(AbstractGenerator):
 
     def generateMultiple(self, primer_sequence=NoteSequence(), number=10, length_in_quarters=16, temperature=0.4):
         t1 = time.time()
-        generator_options = self.__setupGeneratorOptions(primer_sequence, length_in_quarters, temperature)
+        generator_options, start, end = self.__setupGeneratorOptions(primer_sequence, length_in_quarters, temperature)
         generated_sequences = []
         for i in range(0, number):
-            generated_sequences.append(self.model.generate(primer_sequence, generator_options))
+            generated_sequence = self.model.generate(primer_sequence, generator_options)
+            generated_sequences.append(extract_subsequence(generated_sequence, start, end))
         t2 = time.time()
 
         return {
@@ -81,10 +83,10 @@ class MusicRNNGenerator(AbstractGenerator):
         seconds_per_step = 60.0 / qpm / self.model.steps_per_quarter
 
         primer_end_time = (max(n.end_time for n in primer_sequence.notes) if primer_sequence.notes else 0)
-        total_time = primer_end_time * seconds_per_step + num_steps * seconds_per_step
+        total_time = primer_end_time + num_steps * seconds_per_step
 
         print("num_steps: " + str(num_steps))
-        print("qpm: " + str(num_steps))
+        print("qpm: " + str(qpm))
         print("seconds_per_step: " + str(seconds_per_step))
         print("primer_end_time: " + str(primer_end_time))
         print("total_time: " + str(total_time))
@@ -93,4 +95,4 @@ class MusicRNNGenerator(AbstractGenerator):
         generator_options = generator_pb2.GeneratorOptions()
         generator_options.args['temperature'].float_value = temperature
         generator_options.generate_sections.add(start_time=primer_end_time + seconds_per_step, end_time=total_time)
-        return generator_options
+        return generator_options, primer_end_time, total_time

@@ -11,9 +11,9 @@ from . import AbstractGenerator
 
 class MidiMeGenerator(AbstractGenerator):
 
-    model = 'cat-mel_2bar_big'
-    config = CONFIG_MAP['ae-' + model]
-    vae_config = VAE_CONFIG_MAP[model]
+    checkpoint = 'cat-mel_2bar_big'
+    config = CONFIG_MAP['ae-' + checkpoint]
+    vae_config = VAE_CONFIG_MAP[checkpoint]
     pretrained_path =  os.path.abspath('../models/vae/cat-mel_2bar_big.ckpt')
     train_dir = os.path.abspath('../models/tmp/train/')
 
@@ -21,7 +21,7 @@ class MidiMeGenerator(AbstractGenerator):
         super().__init__()
 
     
-    def trainFromMIDI(self, midis, num_steps=50):
+    def trainFromMIDI(self, midis, num_steps=100):
         """
         Trains the MidiMe model based on a list of midi objects.
 
@@ -32,7 +32,7 @@ class MidiMeGenerator(AbstractGenerator):
         """
         print('[GEN] Writing MIDIs to tfrecord...')
         t1 = time.time()
-        tfrecord = os.path.expanduser('../models/midimi/tmp/training-data-cache.tfrecord')
+        tfrecord = os.path.expanduser('../models/midime/tmp/training-data-cache.tfrecord')
 
         for midi in midis:
             note_seq = midi_to_note_sequence(midi)
@@ -40,13 +40,13 @@ class MidiMeGenerator(AbstractGenerator):
             with tf.io.TFRecordWriter(tfrecord) as writer:
                 writer.write(note_seq.SerializeToString())
         t2 = time.time()
-        print('[GEN] 🎉 Done writing in ' + t2-t1 + ' sec.')
+        print('[GEN] 🎉 Done writing in ' + str(t2-t1) + ' sec.')
 
         self.trainFromTfRecord(tfrecord, num_steps)
 
 
 
-    def trainFromTfRecord(self, tfrecord_path, num_steps=50):
+    def trainFromTfRecord(self, tfrecord_path, num_steps=100):
         """
         Trains the MidiMe model based on a set of note_sequences serialized to a .tfrecord file.
 
@@ -72,15 +72,11 @@ class MidiMeGenerator(AbstractGenerator):
         )
         t2 = time.time()
         self.train_dur = t2-t1
-        print('[GEN] 🎉 Finished training in ' + t2-t1 + ' sec.')
+        print('[GEN] 🎉 Finished training in ' + str(t2-t1) + ' sec.')
 
-
-
-    def generate(self, length_in_quarters=8, temperature=0.4):
-        
+        print('[GEN] Initializing constrainted VAE model...')
         t1 = time.time()
-        print('[GEN] Loading model...')
-        model = TrainedModel(
+        self.model = TrainedModel(
             vae_config=self.vae_config,
             model_config=self.config,
             batch_size=1,
@@ -89,9 +85,36 @@ class MidiMeGenerator(AbstractGenerator):
             model_var_pattern=['latent'],
             session_target=''
         )
+        t2 = time.time()
+        self.train_dur += t2-t1
+        print('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
 
-        print('[GEN] Sampling from model...')
-        generated_sequence = model.sample(n=1, length=length_in_quarters*4, temperature=temperature)
+
+    def initializeFromCheckpoint(self, path=train_dir):
+        '''
+        NOTE not sure if this works considering the configs might be incorrect if not trained within hte same object instance
+        '''
+        print('[GEN] Initializing constrainted VAE model...')
+        t1 = time.time()
+        self.model = TrainedModel(
+            vae_config=self.vae_config,
+            model_config=self.config,
+            batch_size=1,
+            vae_checkpoint_dir_or_path=self.pretrained_path,
+            model_checkpoint_dir_or_path=path,
+            model_var_pattern=['latent'],
+            session_target=''
+        )
+        t2 = time.time()
+        self.train_dur += t2-t1
+        print('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
+
+
+
+    def generate(self, length_in_quarters=8, temperature=0.4):
+        
+        t1 = time.time()
+        generated_sequence = self.model.sample(n=1, length=length_in_quarters*4, temperature=temperature)
         t2 = time.time()
 
         return {
@@ -99,7 +122,30 @@ class MidiMeGenerator(AbstractGenerator):
             'meta': {
                 'gen_dur': t2-t1,
 		        'model': 'MidiMe',
-		        'checkpoint': self.model,
+		        'checkpoint': self.checkpoint,
+		        'temperature':temperature,
+                'training_meta': {
+                    'trained_on': [], # TODO add midi file refs (pass optional array to train() ?)
+                    'train_dur': self.train_dur,
+                    'steps': self.num_steps
+                }	
+            }
+        }
+
+
+
+    def generateMultiple(self, number=10, length_in_quarters=8, temperature=0.4):
+        
+        t1 = time.time()
+        generated_sequences = self.model.sample(n=number, length=length_in_quarters*4, temperature=temperature)
+        t2 = time.time()
+
+        return {
+            'sequences': generated_sequences,
+            'meta': {
+                'gen_dur': t2-t1,
+		        'model': 'MidiMe',
+		        'checkpoint': self.checkpoint,
 		        'temperature':temperature,
                 'training_meta': {
                     'trained_on': [], # TODO add midi file refs (pass optional array to train() ?)
