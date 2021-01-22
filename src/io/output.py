@@ -85,13 +85,13 @@ def synthesizeMidi(midi: PrettyMIDI):
         print('[IO] Output error: The midi object is empty.')
 
 
-def saveMidiFile(midi: PrettyMIDI, file_path: str):
+def saveMidiFile(midi: PrettyMIDI, file_path: str, print: bool = True):
     """
     docstring
     """
     midi.write(file_path)
-    print('[IO] file saved to:')
-    showFileLink(file_path)
+    if print: print('[IO] file saved to:')
+    if print: showFileLink(file_path)
 
 def saveNoteSeqToMidiFile(note_seq: NoteSequence, file_path: str):
     """
