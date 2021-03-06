@@ -2,9 +2,6 @@
 """core.py
 Include feature extractor and musically informed objective measures.
 """
-import sys
-import os
-import glob
 import math
 import numpy as np
 import midi
@@ -73,7 +70,7 @@ class metrics(object):
                     if num_bar is None:
                         num_bar = int(round(float(pattern[track_num][-1].tick) / bar_length))
                         used_notes = np.zeros((num_bar, 1))
-                        used_notes[pattern[track_num][i].tick / bar_length] += 1
+                        used_notes[(int) (pattern[track_num][i].tick / bar_length)] += 1
                     else:
                         used_notes = np.zeros((num_bar, 1))
                         used_notes[pattern[track_num][i].tick / bar_length] += 1
@@ -87,7 +84,7 @@ class metrics(object):
                         else:
                             note_list = []
                     note_list.append(pattern[track_num][i].data[0])
-                    used_notes[pattern[track_num][i].tick / bar_length] += 1
+                    used_notes[(int) (pattern[track_num][i].tick / bar_length)] += 1
 
         used_pitch = np.zeros((num_bar, 1))
         current_note = 0
@@ -147,13 +144,13 @@ class metrics(object):
                     if num_bar is None:
                         num_bar = int(round(float(pattern[track_num][-1].tick) / bar_length))
                         used_notes = np.zeros((num_bar, 1))
-                        used_notes[pattern[track_num][i].tick / bar_length] += 1
+                        used_notes[(int)(pattern[track_num][i].tick / bar_length)] += 1
                     else:
                         used_notes = np.zeros((num_bar, 1))
                         used_notes[pattern[track_num][i].tick / bar_length] += 1
 
                 else:
-                    used_notes[pattern[track_num][i].tick / bar_length] += 1
+                    used_notes[(int)(pattern[track_num][i].tick / bar_length)] += 1
         return used_notes
 
     def total_pitch_class_histogram(self, feature):
@@ -173,7 +170,7 @@ class metrics(object):
         histogram = histogram / sum(histogram)
         return histogram
 
-    def bar_pitch_class_histogram(self, feature, track_num=1, bpm=120, num_bar=None):
+    def bar_pitch_class_histogram(self, feature, track_num: int = 0, bpm: int = 120, num_bar=None):
         """
         bar_pitch_class_histogram (Pitch class histogram per bar):
 
@@ -189,8 +186,8 @@ class metrics(object):
         # todo: deal with more than one time signature cases
         pm_object = feature['pretty_midi']
         if num_bar is None:
-            numer = pm_object.time_signature_changes[-1].numerator
-            deno = pm_object.time_signature_changes[-1].denominator
+            numer = pm_object.time_signature_changes[-1].numerator if len(pm_object.time_signature_changes) > 0 else 4
+            deno = pm_object.time_signature_changes[-1].denominator if len(pm_object.time_signature_changes) > 0 else 4
             bar_length = 60. / bpm * numer * 4 / deno * 100
             piano_roll = pm_object.instruments[track_num].get_piano_roll(fs=100)
             piano_roll = np.transpose(piano_roll, (1, 0))
@@ -198,8 +195,8 @@ class metrics(object):
             num_bar = int(round(actual_bar))
             bar_length = int(round(bar_length))
         else:
-            numer = pm_object.time_signature_changes[-1].numerator
-            deno = pm_object.time_signature_changes[-1].denominator
+            numer = pm_object.time_signature_changes[-1].numerator if len(pm_object.time_signature_changes) > 0 else 4
+            deno = pm_object.time_signature_changes[-1].denominator if len(pm_object.time_signature_changes) > 0 else 4
             bar_length = 60. / bpm * numer * 4 / deno * 100
             piano_roll = pm_object.instruments[track_num].get_piano_roll(fs=100)
             piano_roll = np.transpose(piano_roll, (1, 0))

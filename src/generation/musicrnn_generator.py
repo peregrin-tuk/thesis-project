@@ -4,7 +4,7 @@ from enum import Enum
 from magenta.models.melody_rnn import melody_rnn_sequence_generator
 from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
-from note_seq import NoteSequence, extract_subsequence
+from note_seq import NoteSequence, extract_subsequence, trim_note_sequence
 from . import AbstractGenerator
 
 _CHECKPOINTS = {
@@ -43,7 +43,7 @@ class MusicRNNGenerator(AbstractGenerator):
         t1 = time.time()
         generator_options, start, end = self.__setupGeneratorOptions(primer_sequence, length_in_quarters, temperature)
         generated_sequence = self.model.generate(primer_sequence, generator_options)
-        generated_sequence = extract_subsequence(generated_sequence, start, end)
+        generated_sequence = trim_note_sequence(generated_sequence, start, end)
         t2 = time.time()
 
         return {
@@ -63,7 +63,7 @@ class MusicRNNGenerator(AbstractGenerator):
         generated_sequences = []
         for i in range(0, number):
             generated_sequence = self.model.generate(primer_sequence, generator_options)
-            generated_sequences.append(extract_subsequence(generated_sequence, start, end))
+            generated_sequences.append(generated_sequence) # extract_subsequence(generated_sequence, start, end)
         t2 = time.time()
 
         return {
@@ -90,7 +90,6 @@ class MusicRNNGenerator(AbstractGenerator):
         print("seconds_per_step: " + str(seconds_per_step))
         print("primer_end_time: " + str(primer_end_time))
         print("total_time: " + str(total_time))
-        print("primer: " + str(primer_sequence))
 
         generator_options = generator_pb2.GeneratorOptions()
         generator_options.args['temperature'].float_value = temperature
