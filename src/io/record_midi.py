@@ -23,7 +23,7 @@
 
 from datetime import datetime
 import mido
-import pretty_midi
+from src.io import conversion
 
 
 class MidiInput():
@@ -259,10 +259,8 @@ class MidiInput():
             print('[IO] nothing was recorded.')
             return None
 
-        midi.save(self.midi_file_cache)
-        pm = pretty_midi.PrettyMIDI(self.midi_file_cache)
         print('\n[IO] recording successful.')
-        return pm
+        return conversion.mido_to_pretty_midi(midi)
 
 
 
