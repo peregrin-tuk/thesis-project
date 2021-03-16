@@ -1,7 +1,15 @@
-import muspy
+import os
+import logging
+import time
 from pathlib import Path
 
-#TODO create optional argument regex to choose the melody track based on that regex
+import muspy
+from tqdm.notebook import tqdm
+
+from src.utils.strings import remove_prefix, remove_suffix
+
+
+# TODO create optional argument regex to choose the melody track based on that regex
 
 def extract_melodies_to_folder(song: muspy.Music, song_name: str or int, set_name: str, length_in_bars: int):
     """
@@ -17,63 +25,115 @@ def extract_melodies_to_folder(song: muspy.Music, song_name: str or int, set_nam
         length_in_bars (int): How long the extracted sequences shall be. Measured in bars, based on the time signature provided in the muspy.Music object.
 
     Returns:
-        int: 1 if operation was successful, 0 if no track was found, -1 in case of an error.
+        int: count of full call-and-response pairs created if the operation was successful,
+             0 if no track was found, 
+             -1 if the midi track is not long enough to extract at least one call-and-response pair.
     """
+
     track = get_melody_track(song.tracks)
 
     if track is not None:
-        is_call = True
-        count = 1
+        end_time = track[-1].time / song.resolution
+        quarters_per_bar = song.time_signatures[0].numerator * 4 / song.time_signatures[0].denominator
 
-        # bar_dur_in_sec = 60 / song.tempos[0].qpm * song.time_signature[0].nominator * 4 / song.time_signature[0].denominator
-        time_steps_per_bar = song.resolution * song.time_signatures[0].numerator * 4 / song.time_signatures[0].denominator
-        starting_bar = round(track.notes[0].time / time_steps_per_bar)
+        # check if track is long enough to extract at least 1 call-and-response pair (>= 2x length of one sequence)
+        if round(end_time / quarters_per_bar) >= length_in_bars * 2:
+            is_call = True
+            count = 1
 
-        starting_time = starting_bar * time_steps_per_bar
-        time_marker_start = starting_time
-        time_marker_end = time_marker_start + time_steps_per_bar * length_in_bars
+            # TODO delete line: bar_dur_in_sec = 60 / song.tempos[0].qpm * song.time_signature[0].nominator * 4 / song.time_signature[0].denominator
+            time_steps_per_bar = song.resolution * song.time_signatures[0].numerator * 4 / song.time_signatures[0].denominator
+            starting_bar = round(track.notes[0].time / time_steps_per_bar)
 
-        base_path = '../data/reference_data/' + set_name + '/' + str(song_name) + '/'
-        Path(base_path).mkdir(parents=True, exist_ok=True)
+            starting_time = starting_bar * time_steps_per_bar
+            time_marker_start = starting_time
+            time_marker_end = time_marker_start + time_steps_per_bar * length_in_bars
 
-        excerpt = __create_new_empty_track(song)
+            base_path = '../data/reference_data/' + set_name + '/' + str(song_name) + '/'
+            Path(base_path).mkdir(parents=True, exist_ok=True)
 
-        for note in track.notes:
-            if (note.time < starting_time):
-                pass
-            elif (note.time < time_marker_end):
-                excerpt.tracks[0].append(__extract_note(note, time_marker_start, song.tempos[0].qpm, song.resolution))
-            else:
-                # save excerpt
-                if is_call: 
-                    try:
-                        muspy.write_midi(base_path + '{:02d}'.format(count) + '_call.mid', excerpt, backend='pretty_midi')
-                    except BaseException as error:
-                        print('Error: Could not write MIDI file - ' + str(error))
-                        return -1
+            excerpt = __create_new_empty_track(song)
+
+            for note in track.notes:
+                if (note.time < starting_time):
+                    pass
+                elif (note.time < time_marker_end):
+                    excerpt.tracks[0].append(__extract_note(note, time_marker_start, song.tempos[0].qpm, song.resolution))
                 else:
-                    try:
-                        muspy.write_midi(base_path + '{:02d}'.format(count) + '_response.mid', excerpt, backend='pretty_midi')
-                    except BaseException as error:
-                        print('Error: Could not write MIDI file - ' + str(error))
-                        return -1
+                    # save excerpt
+                    __save_excerpt(excerpt, base_path, is_call, count)
 
-                # init new one
-                excerpt = __create_new_empty_track(song)
+                    # init new one
+                    excerpt = __create_new_empty_track(song)
 
-                # change time markers (move window x bars)
-                time_marker_start = time_marker_end
-                time_marker_end = time_marker_start + time_steps_per_bar * length_in_bars
+                    # change time markers (move window x bars)
+                    time_marker_start = time_marker_end
+                    time_marker_end = time_marker_start + time_steps_per_bar * length_in_bars
 
-                # append current note
-                excerpt.tracks[0].append(__extract_note(note, time_marker_start, song.tempos[0].qpm, song.resolution))
-                
-                # increase count and toggle call/response
-                if not is_call:
-                    count += 1
-                is_call = not is_call
-        return 1
+                    # append current note
+                    excerpt.tracks[0].append(__extract_note(note, time_marker_start, song.tempos[0].qpm, song.resolution))
+                    
+                    # increase count and toggle call/response
+                    if not is_call:
+                        count += 1
+                    is_call = not is_call
+
+            if is_call:
+                return count-1
+            else:
+                # after all notes were processed, save the last excerpt if it is a response
+                # if the last excerpt is a call, it does not have to be saved as it is of no use without a corresponding response sequence
+                __save_excerpt(excerpt, base_path, is_call, count)
+                return count
+        return -1
     return 0
+
+
+def split_all_midis_from_folder(source_folder, name_for_destination_folder, excerpt_length_in_bars, create_log_file = True):
+    song_count = 0
+    pair_count = 0
+    no_mel = 0
+    too_short = 0
+    err = 0
+
+    t1 = time.time()
+    Path('../data/reference_data/' + name_for_destination_folder).mkdir(parents=True, exist_ok=True)   
+    if create_log_file: logging.basicConfig(filename='../data/reference_data/' + name_for_destination_folder + '/call-response-split.log', level=logging.DEBUG)
+
+    for root, dirs, files in tqdm(os.walk(source_folder)):
+        for file in files:
+            if file.endswith(".mid"):
+                try:
+                    song = muspy.read(os.path.join(root, file))
+                    file_name = remove_prefix(root, source_folder + "\\").replace("\\", "_") + "_" + remove_suffix(remove_suffix(file, ".mid"), "_symbol_key")
+                    result = extract_melodies_to_folder(song, file_name, name_for_destination_folder, excerpt_length_in_bars)
+                    if (result == 0):  
+                        if create_log_file: logging.info("No melody track found for %s", file_name)
+                        no_mel += 1
+                    elif (result == -1):
+                        if create_log_file: logging.info("Track is too short: %s", file_name)
+                        too_short += 1
+                    else:
+                        pair_count += result
+                    song_count += 1
+                    
+                except ValueError as error:
+                    if create_log_file: logging.error("The following error occurred while processing %s: %s", file_name, error)
+
+    t2 = time.time()
+    if create_log_file:
+        logging.info("%s songs processed.", song_count)
+        logging.info("%s call-and-response pairs created.", pair_count)
+        logging.info("%s songs had no melody track.", no_mel)
+        logging.info("%s songs were too short.", too_short)
+        logging.info("%s songs could not be processed due to an error.",  err)
+        logging.info("Total duration in seconds: %d", (t2-t1))
+
+    print(str(song_count) + " songs processed in " + str(t2-t1) + " seconds.")
+    print(str(pair_count) + " call-and-response pairs created.")
+    print(str(no_mel) + " songs had no melody track.")
+    print(str(too_short) + " songs were too short.")
+    print(str(err) + " songs could not be processed due to an error.")
 
 
 def __extract_note(note, time_marker_start, bpm, resolution):
@@ -94,13 +154,25 @@ def __create_new_empty_track(song):
     return excerpt
 
 
+def __save_excerpt(excerpt, base_path, is_call, count):
+    if is_call: 
+        try:
+            muspy.write_midi(base_path + '{:02d}'.format(count) + '_call.mid', excerpt, backend='pretty_midi')
+        except BaseException as error:
+            print('Error: Could not write MIDI file - ' + str(error))
+            return -1
+    else:
+        try:
+            muspy.write_midi(base_path + '{:02d}'.format(count) + '_response.mid', excerpt, backend='pretty_midi')
+        except BaseException as error:
+            print('Error: Could not write MIDI file - ' + str(error))
+            return -1
 
 def get_melody_track(tracks):
     for track in tracks:
         if track.name.lower() == "melody" or track.name.lower() == "vocals" or track.name.lower() == "mel":
             return track
-    else:
-        return None
+    return None
 
 
 def convert_time_steps_to_seconds(time_steps, bpm, resolution):
