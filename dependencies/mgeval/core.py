@@ -4,9 +4,8 @@ Include feature extractor and musically informed objective measures.
 """
 import math
 import numpy as np
-import midi
 import pretty_midi
-
+import midi
 
 # feature extractor
 def extract_feature(_file):
@@ -73,7 +72,7 @@ class metrics(object):
                         used_notes[(int) (pattern[track_num][i].tick / bar_length)] += 1
                     else:
                         used_notes = np.zeros((num_bar, 1))
-                        used_notes[pattern[track_num][i].tick / bar_length] += 1
+                        used_notes[(int) (pattern[track_num][i].tick / bar_length)] += 1
                     note_list = []
                     note_list.append(pattern[track_num][i].data[0])
 
@@ -147,7 +146,7 @@ class metrics(object):
                         used_notes[(int)(pattern[track_num][i].tick / bar_length)] += 1
                     else:
                         used_notes = np.zeros((num_bar, 1))
-                        used_notes[pattern[track_num][i].tick / bar_length] += 1
+                        used_notes[(int) (pattern[track_num][i].tick / bar_length)] += 1
 
                 else:
                     used_notes[(int)(pattern[track_num][i].tick / bar_length)] += 1
@@ -295,6 +294,7 @@ class metrics(object):
                     current_note = pattern[track_num][i].data[0]
                     counter += 1
         pitch_shift = np.mean(abs(d_note))
+        pitch_shift = np.nan_to_num(pitch_shift) #custom
         return pitch_shift
 
     def avg_IOI(self, feature):
@@ -310,6 +310,7 @@ class metrics(object):
         onset = pm_object.get_onsets()
         ioi = np.diff(onset)
         avg_ioi = np.mean(ioi)
+        avg_ioi = np.nan_to_num(avg_ioi) #costum
         return avg_ioi
 
     def note_length_hist(self, feature, track_num=1, normalize=True, pause_event=False):

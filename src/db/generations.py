@@ -7,8 +7,8 @@ from pretty_midi import PrettyMIDI
 
 from src.io.output import saveMidiFile
 
-db_path = '../data/database.db'
-midi_dir_path = '../data/midi_files'
+db_path = '../data/generations.db'
+midi_dir_path = '../data/generation_files'
 
 
 class SequenceType(Enum):
@@ -133,7 +133,7 @@ def store_generation_result(
 
 
 
-def store_midi(midi: PrettyMIDI, type: SequenceType, analysis: JSON = None):
+def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = None):
     """ 
     Adds a database entry for a midi file and stores the corresponding file in the file system.
 
@@ -148,19 +148,19 @@ def store_midi(midi: PrettyMIDI, type: SequenceType, analysis: JSON = None):
     conn = create_connection()
     cursor = conn.cursor()
     date = datetime.now()
-    id = cursor.lastrowid + 1 if cursor.lastrowid is not None else 0 
-    file_path = '{:03d}_'.format(id) + date.strftime("%Y-%m-%d-%H-%M") + '_{}.mid'.format(type.name) # save midis as ###(id)_####-##-##-##-##(date)_(type).mid
+    index = cursor.lastrowid + 1 if cursor.lastrowid is not None else 0 
+    file_path = '{:03d}_'.format(index) + date.strftime("%Y-%m-%d-%H-%M") + '_{}.mid'.format(sequence_type.name) # save midis as ###(id)_####-##-##-##-##(date)_(type).mid
 
     sql_insert_midi = """INSERT INTO midi_analysis(midi_file, date_created, type, analysis)
               VALUES(?, ?, ?, ?)"""
 
     sql_update_filepath = """UPDATE midi_analysis SET midi_file = ? WHERE id = ?"""
 
-    cursor.execute(sql_insert_midi, (file_path, date, type.name, analysis))
+    cursor.execute(sql_insert_midi, (file_path, date, sequence_type.name, analysis))
 
     # check id
     last_id = cursor.lastrowid 
-    if (last_id is not id):
+    if (last_id is not index):
         file_path = f'{last_id:03}{file_path[3:]}'
         cursor.execute(sql_update_filepath, (file_path, last_id))
 

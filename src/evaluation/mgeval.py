@@ -31,11 +31,12 @@
 
 from typing import List
 
-import midi
 import numpy as np
 from pretty_midi import PrettyMIDI
 from sklearn.model_selection import LeaveOneOut
 from note_seq import NoteSequence, note_sequence_to_pretty_midi, note_sequence_to_midi_file
+import midi
+
 from dependencies.mgeval import core, utils
 
 
@@ -49,30 +50,37 @@ def analyze_sequence(note_seq: NoteSequence):
 
     feature = {'pretty_midi': note_sequence_to_pretty_midi(note_seq),
                'midi_pattern': midi.read_midifile(midi_file_cache)}
-    bpm = note_seq.tempos[0].qpm
+    bpm = note_seq.tempos[0].qpm # TODO check if 0
     return __analyze(feature, bpm)
 
 
-def analyze_midi(midi_file: str):
+def analyze_midi(midi_file: str, length_in_bars: int = None):
     feature = core.extract_feature(midi_file)
-    bpm = feature['pretty_midi'].get_tempo_changes()[0]
-    return __analyze(feature, bpm)
+    tempo_list = feature['pretty_midi'].get_tempo_changes()
+    bpm = next((i for i, x in enumerate(tempo_list) if x != 0), 120)
+    return __analyze(feature, bpm, length_in_bars)
 
 
-def __analyze(feature, bpm, normalize=False):
+def __analyze(feature, bpm: int, length_in_bars: int = None, normalize: bool = False):
+    try:
+        feature['pretty_midi'].instruments[0]
+    except IndexError:
+        print('[EVAL] Error: Midi file is empty and can not be analyzed')
+        return None
+
     metrics = core.metrics()
 
     return {
         'pitch_count': metrics.total_used_pitch(feature),
-        'pitch_count_per_bar': metrics.bar_used_pitch(feature),
+        'pitch_count_per_bar': 0.0, # metrics.bar_used_pitch(feature, 1, length_in_bars), # TODO calculation in core seems to return wrong results
         'pitch_class_histogram': metrics.total_pitch_class_histogram(feature),
-        'pitch_class_histogram_per_bar': metrics.bar_pitch_class_histogram(feature, 0, bpm),
+        'pitch_class_histogram_per_bar': metrics.bar_pitch_class_histogram(feature, 0, bpm, length_in_bars),
         'pitch_class_transition_matrix': metrics.pitch_class_transition_matrix(feature),
         'avg_pitch_interval': metrics.avg_pitch_shift(feature),
         'pitch_range': metrics.pitch_range(feature),
 
         'note_count': metrics.total_used_note(feature),
-        'note_count_per_bar': metrics.bar_used_note(feature),
+        'note_count_per_bar': 0.0, # metrics.bar_used_note(feature, 1, length_in_bars), # TODO calculation in core seems to return wrong results
         'note_length_histogram': metrics.note_length_hist(feature, pause_event=True),
         'note_length_transition_matrix': metrics.note_length_transition_matrix(feature, pause_event=True),
         'avg_ioi': metrics.avg_IOI(feature),
@@ -89,14 +97,14 @@ def calc_distances(metrics1: dict, metrics2: dict):
     return distances
 
 
-def calc_intra_set_distances(set: List[dict]):
+def calc_intra_set_distances(set_of_sequences: List[dict]):
     loo = LeaveOneOut()
-    loo.get_n_splits(np.arange(len(set)))
-    intra_set_distances = np.zeros((len(set), len(set[0]), len(set)-1))
+    loo.get_n_splits(np.arange(len(set_of_sequences)))
+    intra_set_distances = np.zeros((len(set_of_sequences), len(set_of_sequences[0]), len(set_of_sequences)-1))
     i = 0
-    for key in set[0]:
-        for train_index, test_index in loo.split(np.arange(len(set))):
-            intra_set_distances[test_index[0]][i] = utils.c_dist(set[test_index][key], set[train_index][key])
+    for key in set_of_sequences[0]:
+        for train_index, test_index in loo.split(np.arange(len(set_of_sequences))):
+            intra_set_distances[test_index[0]][i] = utils.c_dist(set_of_sequences[test_index][key], set_of_sequences[train_index][key])
         i += i
 
     return intra_set_distances
@@ -104,45 +112,45 @@ def calc_intra_set_distances(set: List[dict]):
 
 #### SINGLE FEATURES ####
 
-def __get_pitch_count(midi: PrettyMIDI):
+def __get_pitch_count(midi_sequence: PrettyMIDI):
     pass
 
-def __get_pitch_count_per_bar(midi: PrettyMIDI):
+def __get_pitch_count_per_bar(midi_sequence: PrettyMIDI):
     pass
 
-def __get_pitch_class_histogram(midi: PrettyMIDI):
+def __get_pitch_class_histogram(midi_sequence: PrettyMIDI):
     pass
 
-def __get_pitch_class_histogram_per_bar(midi: PrettyMIDI):
+def __get_pitch_class_histogram_per_bar(midi_sequence: PrettyMIDI):
     pass
 
-def __get_pitch_class_transition_matrix(midi: PrettyMIDI):
+def __get_pitch_class_transition_matrix(midi_sequence: PrettyMIDI):
     # TODO normalization?
     pass
 
-def __get_avg_pitch_interval(midi: PrettyMIDI):
+def __get_avg_pitch_interval(midi_sequence: PrettyMIDI):
     pass
 
-def __get_pitch_range(midi: PrettyMIDI):
+def __get_pitch_range(midi_sequence: PrettyMIDI):
     # can also be seen from histogram
     pass
 
 
 
-def __get_note_count(midi: PrettyMIDI):
+def __get_note_count(midi_sequence: PrettyMIDI):
     pass
 
-def __get_note_count_per_bar(midi: PrettyMIDI):
+def __get_note_count_per_bar(midi_sequence: PrettyMIDI):
     pass
 
-def __get_note_length_histogram(midi: PrettyMIDI):
+def __get_note_length_histogram(midi_sequence: PrettyMIDI):
     pass
 
-def __get_note_length_transition_matrix(midi: PrettyMIDI):
+def __get_note_length_transition_matrix(midi_sequence: PrettyMIDI):
     # TODO normalize?
     pass
 
-def __get_avg_ioi(midi: PrettyMIDI):
+def __get_avg_ioi(midi_sequence: PrettyMIDI):
     pass
 
 # def get_ioi_range() ?

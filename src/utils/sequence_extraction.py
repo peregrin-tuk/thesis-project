@@ -60,8 +60,14 @@ def extract_melodies_to_folder(song: muspy.Music, song_name: str or int, set_nam
                 elif (note.time < time_marker_end):
                     excerpt.tracks[0].append(__extract_note(note, time_marker_start, song.tempos[0].qpm, song.resolution))
                 else:
-                    # save excerpt
-                    __save_excerpt(excerpt, base_path, is_call, count)
+                    if (len(excerpt.tracks[0]) > 0):
+                        # save excerpt
+                        __save_excerpt(excerpt, base_path, is_call, count)
+
+                        # increase count and toggle call/response
+                        if not is_call:
+                            count += 1
+                        is_call = not is_call
 
                     # init new one
                     excerpt = __create_new_empty_track(song)
@@ -72,11 +78,6 @@ def extract_melodies_to_folder(song: muspy.Music, song_name: str or int, set_nam
 
                     # append current note
                     excerpt.tracks[0].append(__extract_note(note, time_marker_start, song.tempos[0].qpm, song.resolution))
-                    
-                    # increase count and toggle call/response
-                    if not is_call:
-                        count += 1
-                    is_call = not is_call
 
             if is_call:
                 return count-1
