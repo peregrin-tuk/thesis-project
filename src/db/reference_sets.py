@@ -218,7 +218,7 @@ def update_avg_distances_for_set(
     cursor = conn.cursor()
     date = datetime.now()
 
-    sql_update_ref_set = """UPDATE reference_set
+    sql_update_ref_set = """UPDATE reference_sets
                             SET date_analyzed = ?,
                                 average_similarity_distances = ?
                             WHERE id = ?"""
