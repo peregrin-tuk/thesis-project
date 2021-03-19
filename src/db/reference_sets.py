@@ -1,4 +1,5 @@
 import sqlite3
+import pandas as pd
 from sqlite3 import Error
 from datetime import datetime
 from IPython.core.display import JSON
@@ -286,3 +287,11 @@ def fetch_ref_set_by_name(name: str):
     c.row_factory = sqlite3.Row
     c.execute(sql_fetch_set, (name,))
     return c.fetchone()
+
+
+def ref_data_table_to_dataframe(index: int):
+    conn = create_connection()
+    df = pd.read_sql_query("SELECT * FROM reference_data WHERE set_id = ?", conn, params=(index,))
+    conn.commit()
+    conn.close()
+    return df
