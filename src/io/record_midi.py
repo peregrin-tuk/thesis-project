@@ -21,8 +21,11 @@
 # cancelRecording()
 # playNote() ? (als callback um input zu hören, sollte dann synthesize_input = true/false an init übergeben können)
 
+
 from datetime import datetime
+from pathlib import Path
 import mido
+from definitions import ROOT_DIR
 from src.io import conversion
 
 
@@ -36,7 +39,7 @@ class MidiInput():
     default_tempo = 120             # beats per minute (BPM) // MIDI uses QPM (quarters per minute)
     default_beat_resolution = 480   # ticks per beat (= PPQ if time signature = x/4)
     default_time_signature = (4, 4)
-    midi_file_cache = '../midi/tmp/recording_cache.mid'
+    midi_file_cache = ROOT_DIR / Path('/midi/tmp/recording_cache.mid')
     start_on_note = True
 
 

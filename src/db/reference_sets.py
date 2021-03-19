@@ -1,10 +1,14 @@
 import sqlite3
 import pandas as pd
 from sqlite3 import Error
+from pathlib import Path
 from datetime import datetime
 from IPython.core.display import JSON
+import os
 
-db_path = '../data/reference_sets.db'
+from definitions import ROOT_DIR
+
+db_path = ROOT_DIR / Path('data/reference_sets.db')
 
 
 def create_connection():
@@ -17,7 +21,7 @@ def create_connection():
             db_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         return conn
     except Error as e:
-        print(e)
+        print("[DB] Error creating connection to " + str(db_path.absolute()) + ": " + str(e))
 
 
 def create_tables():
@@ -295,3 +299,16 @@ def ref_data_table_to_dataframe(index: int):
     conn.commit()
     conn.close()
     return df
+
+def ref_set_stats_to_dataframe(index: int):
+    sql_fetch_stats = """SELECT average_similarity_distances FROM reference_sets WHERE id = ?"""
+
+    conn = create_connection()
+    c = conn.cursor()
+    c.row_factory = sqlite3.Row
+    c.execute(sql_fetch_stats, (index,))
+    stats = c.fetchone()
+    conn.commit()
+    conn.close()
+
+    return pd.read_json(stats[0], orient="index")

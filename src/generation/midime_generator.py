@@ -1,6 +1,7 @@
 import os
 import time
 import tensorflow as tf
+from pathlib import Path
 from magenta.models.music_vae import data
 from magenta.models.music_vae.configs import CONFIG_MAP as VAE_CONFIG_MAP
 from note_seq import midi_to_note_sequence
@@ -8,14 +9,15 @@ from .midime.midime_train import train
 from .midime.trained_model import TrainedModel
 from .midime.configs import CONFIG_MAP, update_config
 from . import AbstractGenerator
+from definitions import ROOT_DIR
 
 class MidiMeGenerator(AbstractGenerator):
 
     checkpoint = 'cat-mel_2bar_big'
     config = CONFIG_MAP['ae-' + checkpoint]
     vae_config = VAE_CONFIG_MAP[checkpoint]
-    pretrained_path =  os.path.abspath('../models/vae/cat-mel_2bar_big.ckpt')
-    train_dir = os.path.abspath('../models/tmp/train/')
+    pretrained_path =  ROOT_DIR / Path('/models/vae/cat-mel_2bar_big.ckpt')
+    train_dir = ROOT_DIR / Path('/models/tmp/train/')
 
     def __init__(self):
         super().__init__()
@@ -32,7 +34,7 @@ class MidiMeGenerator(AbstractGenerator):
         """
         print('[GEN] Writing MIDIs to tfrecord...')
         t1 = time.time()
-        tfrecord = os.path.expanduser('../models/midime/tmp/training-data-cache.tfrecord')
+        tfrecord = ROOT_DIR / Path('/models/midime/tmp/training-data-cache.tfrecord')
 
         for midi in midis:
             note_seq = midi_to_note_sequence(midi)

@@ -32,15 +32,17 @@
 from typing import List
 
 import numpy as np
+from pathlib import Path
 from pretty_midi import PrettyMIDI
 from sklearn.model_selection import LeaveOneOut
 from note_seq import NoteSequence, note_sequence_to_pretty_midi, note_sequence_to_midi_file
 import midi
 
+from definitions import ROOT_DIR
 from dependencies.mgeval import core, utils
 
 
-midi_file_cache = '../midi/tmp/mgeval_cache.mid'
+midi_file_cache = ROOT_DIR / Path('/midi/tmp/mgeval_cache.mid')
 
 
 #### FULL ANALYSIS ####

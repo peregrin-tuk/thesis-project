@@ -2,13 +2,15 @@ import sqlite3
 from sqlite3 import Error
 from enum import Enum
 from datetime import datetime
+from pathlib import Path
 from IPython.core.display import JSON
 from pretty_midi import PrettyMIDI
 
+from definitions import ROOT_DIR
 from src.io.output import saveMidiFile
 
-db_path = '../data/generations.db'
-midi_dir_path = '../data/generation_files'
+db_path = ROOT_DIR / Path('/data/generations.db')
+midi_dir_path = ROOT_DIR / Path('/data/generation_files')
 
 
 class SequenceType(Enum):
