@@ -6,19 +6,11 @@ from pathlib import Path
 from IPython.core.display import JSON
 from pretty_midi import PrettyMIDI
 
-from definitions import ROOT_DIR
+from definitions import ROOT_DIR, SequenceType
 from src.io.output import saveMidiFile
 
 db_path = ROOT_DIR / Path('/data/generations.db')
 midi_dir_path = ROOT_DIR / Path('/data/generation_files')
-
-
-class SequenceType(Enum):
-    REC_INPUT = 0
-    EXAMPLE = 1
-    GEN_BASE = 2
-    OUTPUT = 3
-
 
 
 def create_connection():

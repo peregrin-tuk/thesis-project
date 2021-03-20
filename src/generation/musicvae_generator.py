@@ -39,7 +39,7 @@ class MusicVAEGenerator(AbstractGenerator):
         print('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
 
 
-    def generate(self, length_in_quarters=8, temperature=0.4):
+    def generate(self, length_in_quarters=16, temperature=0.4):
         t1 = time.time()
         generated_sequence = self.model.sample(
             n=1, length=length_in_quarters*4, temperature=temperature)

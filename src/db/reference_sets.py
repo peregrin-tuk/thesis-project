@@ -4,7 +4,6 @@ from sqlite3 import Error
 from pathlib import Path
 from datetime import datetime
 from IPython.core.display import JSON
-import os
 
 from definitions import ROOT_DIR
 
