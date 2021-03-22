@@ -1,7 +1,6 @@
-import os
 import time
-import tensorflow as tf
 from pathlib import Path
+import tensorflow as tf
 from magenta.models.music_vae import data
 from magenta.models.music_vae.configs import CONFIG_MAP as VAE_CONFIG_MAP
 from note_seq import midi_to_note_sequence
