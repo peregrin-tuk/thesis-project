@@ -1,11 +1,11 @@
 from src.adaptation.adaptation_pipeline import AdaptationPipeline
-from src.adaptation.operations.same_key_operation import SameKeyOperation
+from src.adaptation.operations.transpose_sequence_operation import TransposeSequenceOperation
 
 # this is more of a draft
 
 # prepare a pipeline
 pipeline = AdaptationPipeline()
-pipeline.register(SameKeyOperation)
+pipeline.register(TransposeSequenceOperation)
 
 
 # # adapt a melody with the pipeline

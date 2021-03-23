@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.datatypes.melody import Melody
+from src.datatypes.melody_data import AdaptationMelodyData
 
 class AbstractAdaptationOperation(ABC):
     """Description
@@ -17,5 +17,5 @@ class AbstractAdaptationOperation(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def execute(self, base: Melody, control: Melody, control_analysis: dict):
+    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
         raise NotImplementedError

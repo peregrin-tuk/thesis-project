@@ -21,17 +21,17 @@
 # // refactor this class to call_response_pair (just the melodies) and call_response_configuration (with generator, adaptation steps, length, temperatures)
 
 
-from src.datatypes.melody import Melody
+from src.datatypes.melody_data import MelodyData
 from src.generation import AbstractGenerator
 
 
 class CallResponseSet():
 
     def __init__(self,
-                generator: AbstractGenerator,
-                 input_sequence: Melody = None,
-                 generated_base_sequence: Melody = None,
-                 output_sequence: Melody = None,
+                 generator: AbstractGenerator,
+                 input_sequence: MelodyData = None,
+                 generated_base_sequence: MelodyData = None,
+                 output_sequence: MelodyData = None,
                  input_analysis: dict = None,
                  adaptation_operations: list = None, # TODO rename?
                  similarity_evaluation: dict = None  # rename?
@@ -47,7 +47,4 @@ class CallResponseSet():
 
 
 # next:
-# TODO melodic accent and key analysis in analysis class (wrapper or direct access via music21?)
-# => analysis wrapper for all used analysis operations (expectancy algo, music21 calls, evtl. own beat weight calculation based on velocity and note duration)
-# TODO pipeline and adaptation operations
-# TODO write docstrings
+# TODO => analysis wrapper for all used analysis operations (expectancy algo, music21 calls, evtl. own beat weight calculation based on velocity and note duration)

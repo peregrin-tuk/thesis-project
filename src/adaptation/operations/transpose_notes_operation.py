@@ -1,5 +1,5 @@
 from src.adaptation.abstract_adaptation_operation import AbstractAdaptationOperation
-from src.datatypes.melody import Melody
+from src.datatypes.melody_data import AdaptationMelodyData
 
 from src.analysis.harmonic import key
 
@@ -12,6 +12,6 @@ class TransposeNotesOperation(AbstractAdaptationOperation):
     def required_analysis(self):
         return self._required_analysis
 
-    def execute(self, base: Melody, control: Melody, control_analysis: dict):
+    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
         base_key = key(base.sequence)
         control_key = control_analysis[key.__name__]

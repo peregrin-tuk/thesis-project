@@ -1,5 +1,5 @@
 import time
-from src.datatypes.melody import Melody
+from src.datatypes.melody_data import AdaptationMelodyData
 from src.adaptation.abstract_adaptation_operation import AbstractAdaptationOperation
 
 
@@ -19,17 +19,17 @@ class AdaptationPipeline(AbstractAdaptationOperation):
         return self._required_analysis
 
 
-    def execute(self, base: Melody, control: Melody, control_analysis: dict):
+    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
         """
         Executes all operations in the pipeline on the provided source input.
 
         Args:
-            base (Melody): midi sequence to be adapted
-            control (Melody): midi sequence to which the base sequence should be adapted to
+            base (AdaptationMelodyData): midi sequence to be adapted
+            control (AdaptationMelodyData): midi sequence to which the base sequence should be adapted to
             control_analysis (dict): analysis data of the control sequence
 
         Returns:
-            Melody: Adapted source sequence. Its meta data contains a list of applied adaptations as well as the durations of their execution.
+            AdaptationMelodyData: Adapted source sequence. Its meta data contains a list of applied adaptations as well as the durations of their execution.
         """
         t1 = time.time()
         for operation in self.operations:
