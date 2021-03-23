@@ -47,7 +47,6 @@ class CallResponseSet():
 
 
 # next:
-# TODO expectancy algorithm in analysis
 # TODO melodic accent and key analysis in analysis class (wrapper or direct access via music21?)
 # => analysis wrapper for all used analysis operations (expectancy algo, music21 calls, evtl. own beat weight calculation based on velocity and note duration)
 # TODO pipeline and adaptation operations
