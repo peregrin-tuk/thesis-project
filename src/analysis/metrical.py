@@ -4,7 +4,7 @@ from pretty_midi import PrettyMIDI
 from src.io.conversion import pretty_midi_to_music21
 
 
-def get_thomassen_melodic_accent(melody: PrettyMIDI):
+def thomassen_melodic_accent(melody: PrettyMIDI):
     """
     Calculates the melodic accent of each note in a melody based on Joseph M. Thomassen, “Melodic accent: Experiments and a tentative model” (1982)
 
@@ -22,7 +22,7 @@ def get_thomassen_melodic_accent(melody: PrettyMIDI):
     return melodic_accent
 
 
-def get_beat_strength(melody: PrettyMIDI):
+def beat_strength(melody: PrettyMIDI):
     """
     Returns the beat strength of each note in the sequence.
 
@@ -34,7 +34,6 @@ def get_beat_strength(melody: PrettyMIDI):
     """
     beat_strength = []
     stream = pretty_midi_to_music21(melody)
-    metrical.labelBeatDepth(stream)
     for n in stream.flat.notes:
         beat_strength.append(n.beatStrength)
     return beat_strength
