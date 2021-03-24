@@ -16,3 +16,4 @@ class TransposeSequenceOperation(AbstractAdaptationOperation):
         base_key = key(base.sequence)
         control_key = control_analysis[key.__name__]
 
+        
