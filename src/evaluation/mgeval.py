@@ -52,7 +52,7 @@ def analyze_sequence(note_seq: NoteSequence):
 
     feature = {'pretty_midi': note_sequence_to_pretty_midi(note_seq),
                'midi_pattern': midi.read_midifile(midi_file_cache)}
-    bpm = note_seq.tempos[0].qpm # TODO check if 0
+    bpm = note_seq.tempos[0].qpm if note_seq.tempos[0].qpm != 0 else 120
     return __analyze(feature, bpm)
 
 
