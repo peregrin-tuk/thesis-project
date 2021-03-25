@@ -6,11 +6,8 @@ from src.analysis.harmonic import key
 class TransposeNotesOperation(AbstractAdaptationOperation):
 
     def __init__(self):
-        self._required_analysis = set(key)
-
-    @property
-    def required_analysis(self):
-        return self._required_analysis
+        super().__init__()
+        self.required_analysis = { key }
 
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
         base_key = key(base.sequence)

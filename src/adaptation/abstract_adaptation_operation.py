@@ -1,5 +1,5 @@
-import music21
 from abc import ABC, abstractmethod
+import music21
 from src.datatypes.melody_data import AdaptationMelodyData
 
 class AbstractAdaptationOperation(ABC):
@@ -21,7 +21,7 @@ class AbstractAdaptationOperation(ABC):
 
     def create_meta_and_update_base(self, base: AdaptationMelodyData, name: str, duration: float, adapted_sequence: music21.stream.Stream):
         base.sequence = adapted_sequence
-        base.meta['adaptation_steps'].append({
+        base.meta.setdefault('adaptation_steps',[]).append({
             'name': name,
             'duration': duration,
             'intermediate_result': adapted_sequence

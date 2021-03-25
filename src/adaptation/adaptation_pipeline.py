@@ -6,14 +6,35 @@ from src.adaptation.abstract_adaptation_operation import AbstractAdaptationOpera
 class AdaptationPipeline(AbstractAdaptationOperation):
 
     def __init__(self):
-        self.operations = []
-        self.required_analysis = set()
+        super().__init__()
+        self.__operations = []
 
 
     def register(self, operation: AbstractAdaptationOperation):
         op = operation()
-        self.operations.append(op)
+        self.__operations.append(op)
         self.required_analysis.update(op.required_analysis)
+
+
+    def empty(self):
+        self.__operations = []
+
+
+    def get_operations(self, as_str: bool = True):
+        """
+        Returns the operation steps of the pipline as a list.
+
+        Args:
+            as_str (bool)
+
+        Returns:
+            list with the name of each operation if as_str = true
+            list with the class of each operation if as_str 0 false
+        """
+        if as_str:
+            return [op.__class__.__name__ for op in self.__operations]
+        else:
+            return [op.__class__ for op in self.__operations]
 
 
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
@@ -29,7 +50,7 @@ class AdaptationPipeline(AbstractAdaptationOperation):
             AdaptationMelodyData: Adapted source sequence. Its meta data contains a list of applied adaptations as well as the durations of their execution.
         """
         t1 = time.time()
-        for operation in self.operations:
+        for operation in self.__operations:
             base = operation.execute(base, control, control_analysis)
         t2 = time.time()
 

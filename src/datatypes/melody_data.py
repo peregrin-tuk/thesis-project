@@ -25,4 +25,4 @@ class MelodyData():
 
     def update_sequence_from_adaptation_data(self, data: AdaptationMelodyData):
         self.sequence = music21_to_pretty_midi(data.sequence)
-        self.meta = {**self.meta, **data.meta}
+        self.meta = {**self.meta, **data.meta} # CHECK should adaptation meta rather be set at meta['adaptation'] and analogous meta['generation'] etc?

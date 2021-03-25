@@ -59,7 +59,7 @@ def smoothed_key_per_bar(stream: Stream, window_size_in_bars: int = 1):
     ka.windowSize = window_size_in_bars
     return ka.run()
 
-def raw_key_per_bar(stream: Stream, window_size_in_bars: int = 1):
+def raw_key_per_bar(stream: Stream):
     """
     Estimates the key for every bar of the sequence using the KrumhanslSchmickler algorithm.
 

@@ -6,8 +6,10 @@ from src.datatypes.melody_data import AdaptationMelodyData
 from src.analysis.harmonic import key
 
 class TransposeSequenceOperation(AbstractAdaptationOperation):
+    """Estimates the key of both sequences and transposes the base sequence to be in the same key as the control sequence."""
 
     def __init__(self):
+        super().__init__()
         self.required_analysis = { key }
 
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
