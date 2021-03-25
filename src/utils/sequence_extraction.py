@@ -9,8 +9,6 @@ from tqdm.notebook import tqdm
 from src.utils.strings import remove_prefix, remove_suffix
 
 
-# TODO create optional argument regex to choose the melody track based on that regex
-
 def extract_melodies_to_folder(song: muspy.Music, song_name: str or int, set_name: str, length_in_bars: int):
     """
     Separates a melody track from a Muspy Music object and splits it into call and response pairs.
@@ -41,7 +39,6 @@ def extract_melodies_to_folder(song: muspy.Music, song_name: str or int, set_nam
             is_call = True
             count = 1
 
-            # TODO delete line: bar_dur_in_sec = 60 / song.tempos[0].qpm * song.time_signature[0].nominator * 4 / song.time_signature[0].denominator
             time_steps_per_bar = song.resolution * song.time_signatures[0].numerator * 4 / song.time_signatures[0].denominator
             starting_bar = round(track.notes[0].time / time_steps_per_bar)
 
