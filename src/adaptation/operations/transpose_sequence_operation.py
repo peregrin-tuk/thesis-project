@@ -8,11 +8,7 @@ from src.analysis.harmonic import key
 class TransposeSequenceOperation(AbstractAdaptationOperation):
 
     def __init__(self):
-        self._required_analysis = set(key)
-
-    @property
-    def required_analysis(self):
-        return self._required_analysis
+        self.required_analysis = { key }
 
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
         t1 = time.time()

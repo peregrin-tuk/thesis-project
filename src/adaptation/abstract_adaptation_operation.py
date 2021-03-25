@@ -12,10 +12,8 @@ class AbstractAdaptationOperation(ABC):
 
     """
     
-    @abstractmethod
-    @property
-    def required_analysis(self):
-        raise NotImplementedError
+    def __init__(self):
+        self.required_analysis = set()
 
     @abstractmethod
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):

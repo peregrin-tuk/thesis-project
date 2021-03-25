@@ -7,16 +7,13 @@ class AdaptationPipeline(AbstractAdaptationOperation):
 
     def __init__(self):
         self.operations = []
-        self._required_analysis = set()
+        self.required_analysis = set()
 
 
     def register(self, operation: AbstractAdaptationOperation):
-        self.operations.append(operation)
-        self._required_analysis.update(operation.required_analysis)
-
-    @property
-    def required_analysis(self):
-        return self._required_analysis
+        op = operation()
+        self.operations.append(op)
+        self.required_analysis.update(op.required_analysis)
 
 
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
