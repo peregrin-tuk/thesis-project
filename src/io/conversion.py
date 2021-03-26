@@ -6,7 +6,7 @@ from note_seq import NoteSequence, note_sequence_to_pretty_midi, midi_to_note_se
 
 #   PrettyMIDI <-> Music21
 def pretty_midi_to_music21(melody: PrettyMIDI):
-    tmp = muspy.from_pretty_midi(melody, melody.resolution)
+    tmp = _from_pretty_midi_wrapper(melody, melody.resolution)
     return muspy.to_music21(tmp)
 
 def music21_to_pretty_midi(melody: music21.stream.Stream):
@@ -17,7 +17,7 @@ def music21_to_pretty_midi(melody: music21.stream.Stream):
 #   NoteSequence <-> Music21
 def note_seq_to_music21(melody: NoteSequence):
     midi = note_sequence_to_pretty_midi(melody)
-    tmp = muspy.from_pretty_midi(midi, midi.resolution)
+    tmp = _from_pretty_midi_wrapper(midi, midi.resolution)
     return muspy.to_music21(tmp)
 
 def music21_to_note_seq(melody: music21.stream.Stream):
@@ -32,7 +32,7 @@ def mido_to_pretty_midi(melody: mido.MidiFile):
     return muspy.to_pretty_midi(tmp)
 
 def pretty_midi_to_mido(melody: PrettyMIDI):
-    tmp = muspy.from_pretty_midi(melody, melody.resolution)
+    tmp = _from_pretty_midi_wrapper(melody, melody.resolution)
     return muspy.to_mido(tmp)
 
 
@@ -140,6 +140,83 @@ def _patched_from_pretty_midi(midi: PrettyMIDI, resolution: int = None):
     return music
 
 # muspy.from_pretty_midi = _patched_from_pretty_midi
+
+
+
+
+
+from music21.stream import Score, Part
+from music21.tempo import MetronomeMark
+from music21.pitch import Pitch
+from music21.key import Key
+from music21.note import Note
+
+
+def _seconds_to_quarterLength(seconds: float, qpm: int):
+    return seconds * qpm / 60.0
+
+
+def own_pretty_midi_to_music21(midi: PrettyMIDI):
+    '''
+    Note: Does currently not support multiple tempo changes
+
+    '''
+
+    # Create a new score
+    score = Score()
+
+    # Tracks
+    for track in midi.instruments:
+        # Create a new part
+        part = Part()
+        part.partName = track.name
+
+        # Find instrument
+        try:
+            inst = music21.instrument.instrumentFromMidiProgram(4)
+        except music21.exceptions21.InstrumentException:
+            inst = music21.instrument.instrumentFromMidiProgram(0)
+        part.instrument = inst
+
+        # Tempo
+        tempi = midi.get_tempo_changes()
+        for time, tempo in zip(tempi[0], tempi[1]):
+            metronome = MetronomeMark(number=tempo)
+            metronome.offset = _seconds_to_quarterLength(time, tempo)
+            part.append(metronome)
+
+            qpm = tempo # to support multiple tempo changes make this a list and save time + tempo for later offset calculations
+            break # to support multiple tempo changes this has to be removed
+        
+        # Key Signatures
+        for key in midi.key_signature_changes:
+            pitch = Pitch(key.key_number % 12)
+            mode = 'major' if key.key_number < 12 else 'minor'
+            key21 = Key(pitch, mode)
+            key21.offset = _seconds_to_quarterLength(key.time, qpm)
+            part.append(key21)
+
+        # Time Signatures
+        for ts in midi.time_signature_changes:
+            ts21 = music21.meter.TimeSignature()
+            ts21.numerator = ts.numerator
+            ts21.denominator = ts.denominator
+            ts21.offset = _seconds_to_quarterLength(ts.time, qpm)
+            part.append(ts21)
+
+        # add Notes to Part
+        for note in track.notes:
+            note21 = Note(_get_pitch_name(note.pitch))
+            note21.quarterLength = _seconds_to_quarterLength(note.get_duration(), qpm)
+            note21.volume = note.velocity
+            part.append(note21)
+            part.notes[-1].offset = _seconds_to_quarterLength(note.start, qpm)
+
+        score.append(part)
+        score.makeMeasures()
+    
+    return score
+
 
 
 
