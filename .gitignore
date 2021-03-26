@@ -1,6 +1,7 @@
 # custom
 /models
 /data/reference_data
+/.VSCodeCounter
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
