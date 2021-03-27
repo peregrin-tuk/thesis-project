@@ -12,3 +12,9 @@ class StartEncOnCTOperation(AbstractAdaptationOperation):
 
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
         control_key = control_analysis[key.__name__]
+
+        # use getChord() to get the chord of the control_key at a range around the start/end tone of the base sequence
+
+        # use chord.notes to get the notes
+
+        # use note.pitch.ps to calculate the closest chord tone
