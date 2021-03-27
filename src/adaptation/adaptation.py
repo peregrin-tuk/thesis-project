@@ -31,11 +31,13 @@ class Adaptation():
         self.pipeline.empty()
         for op in operations:
             if isinstance(op, str):
-                self.pipeline.register(self.__find_operation_by_name(op))
+                op_class = self.__find_operation_by_name(op)
+                if op_class is not None:
+                    self.pipeline.register(op_class)
             elif inspect.isclass(op) and issubclass(op, AbstractAdaptationOperation):
                 self.pipeline.register(op)
             else:
-                print("[ADAPT] Warning: Illegal argument for adaptaiton operations: " + str(op))
+                print("[ADAPT] Warning: Illegal argument for adaptation operation: " + str(op))
 
 
     def adapt(self, base: MelodyData, control: MelodyData):
@@ -59,6 +61,6 @@ class Adaptation():
         for op in self.available_operations:
             if name == op.__name__:
                 return op
-        print("[ADAPT] Warning: Operation with name '" + name + "' is not available.")
+        print("[ADAPT] Warning: Operation with name '" + name + "' does not exist.")
 
 
