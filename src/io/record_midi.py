@@ -26,6 +26,7 @@ from datetime import datetime
 from pathlib import Path
 import mido
 import pygame
+import pygame.midi
 
 from definitions import ROOT_DIR
 from src.io import conversion
@@ -63,6 +64,8 @@ class MidiInput():
 
 
     def __del__(self):
+        pygame.midi.quit()
+        pygame.quit()
         self.close_port()
 
 
@@ -224,9 +227,11 @@ class MidiInput():
             self.__init_metronome()
             self.__count_in()
 
+        if self.playback:
+            self.__init_midi_playback()
+
         # tell user that recording started
         print('[IO] NOW RECORDING ...')
-        print('[REC]', end=' ')
 
         return midi, track, init_datetime
 
@@ -267,16 +272,18 @@ class MidiInput():
         # add time ticks to msg and append to track
         # TODO base time ticks on pygame clock (pygame.time.get_ticks() -> sollten Millisekunden sein, dann stimmts mit Metronom zam)
         if msg is not None:
+            # play note
+            if msg.type is 'note_on':
+                self.midi_out.note_on(msg.note, msg.velocity)
+            elif msg.type is 'note_off':
+                self.midi_out.note_off(msg.note, msg.velocity)
+            
             event_datetime = datetime.now()
             delta_time_in_seconds = (event_datetime - last_event_datetime).total_seconds()
             msg.time = int(mido.second2tick(delta_time_in_seconds, self.beat_resolution, mido.bpm2tempo(self.tempo)))
             last_event_datetime = event_datetime
 
             track.append(msg)
-
-            # live output pitches of note_on events while recording
-            if msg.type == 'note_on':
-                print(msg.note, end=' ')
         
         return  track, msg, last_event_datetime
 
@@ -299,7 +306,7 @@ class MidiInput():
 
 
     ########################################
-    ###    INTERNAL METRONOME METHODS    ###
+    ###       METRONOME & PLAYBACK       ###
     ########################################
 
     def __init_metronome(self):
@@ -325,6 +332,12 @@ class MidiInput():
 
         self.clock.tick()
 
+
+    def __init_midi_playback(self):
+        pygame.midi.init()
+        port = pygame.midi.get_default_output_id()
+        self.midi_out = pygame.midi.Output(port, 0)
+        self.midi_out.set_instrument(0)
 
 
 
