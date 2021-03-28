@@ -2,5 +2,8 @@
     "python.pythonPath": "C:\\Users\\Eric\\miniconda3\\envs\\mpro\\python.exe",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+        "--extension-pkg-whitelist=lxml" 
+    ],
     "todo-tree.tree.showBadges": true
 }

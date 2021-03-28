@@ -25,6 +25,8 @@
 from datetime import datetime
 from pathlib import Path
 import mido
+import pygame
+
 from definitions import ROOT_DIR
 from src.io import conversion
 
@@ -40,13 +42,22 @@ class MidiInput():
     default_beat_resolution = 480   # ticks per beat (= PPQ if time signature = x/4)
     default_time_signature = (4, 4)
     midi_file_cache = ROOT_DIR / Path('/midi/tmp/recording_cache.mid')
+    click_sound_file_path = ROOT_DIR / Path('midi/click.wav')
     start_on_note = True
 
 
-    def __init__(self, port_id = default_port, tempo = default_tempo, beat_resolution = default_beat_resolution, time_signature = default_time_signature):
+    def __init__(self, 
+                 port_id=default_port,
+                 tempo=default_tempo,
+                 beat_resolution=default_beat_resolution,
+                 time_signature=default_time_signature,
+                 playback = True,
+                 use_metronome=True):
         self.tempo = tempo
         self.beat_resolution = beat_resolution
         self.time_signature = time_signature
+        self.playback = playback
+        self.use_metronome = use_metronome
         self.open_port(port_id)
 
 
@@ -56,7 +67,10 @@ class MidiInput():
 
 
 
-    ### OPEN & CLOSE INPUT PORT ###
+    #######################################
+    ###     OPEN & CLOSE INPUT PORT     ###
+    #######################################
+
 
     def open_port(self, port_id = 0):
         if port_id in self.used_ports:
@@ -82,11 +96,14 @@ class MidiInput():
             self.used_ports.remove(self.port_id)
             print('[IO] Input port "{0}" closed.'.format(str(mido.get_input_names()[self.port_id])))
         except:
+            print('[IO] WARNING: Input port "{0}" could not be closed. Most likely, it is already closed.'.format(str(mido.get_input_names()[self.port_id])))
             pass
 
 
 
-    ### RECORD ###
+    ########################################
+    ###            RECORDING             ###
+    ########################################
 
     def recordUntilRest(self, max_rest_in_seconds = 2):
         """
@@ -172,7 +189,9 @@ class MidiInput():
 
 
 
-    ### INTERNAL RECORDING METHODS ###
+    ########################################
+    ###    INTERNAL RECORDING METHODS    ###
+    ########################################
 
     def __init_recording(self):
         """
@@ -196,6 +215,15 @@ class MidiInput():
         # init timing
         init_datetime = datetime.now()
 
+        # init pygame
+        if self.use_metronome or self.playback:
+            pygame.init()
+
+        # init metronome
+        if self.use_metronome:
+            self.__init_metronome()
+            self.__count_in()
+
         # tell user that recording started
         print('[IO] NOW RECORDING ...')
         print('[REC]', end=' ')
@@ -216,6 +244,9 @@ class MidiInput():
             ConncetionError: If port is undefined no longer available
         """
 
+        # play metronome click
+        self.__tick()
+
         # listen for incoming message
         try:
             msg = self.port.receive(block=False)
@@ -234,6 +265,7 @@ class MidiInput():
             raise ConnectionError
 
         # add time ticks to msg and append to track
+        # TODO base time ticks on pygame clock (pygame.time.get_ticks() -> sollten Millisekunden sein, dann stimmts mit Metronom zam)
         if msg is not None:
             event_datetime = datetime.now()
             delta_time_in_seconds = (event_datetime - last_event_datetime).total_seconds()
@@ -266,8 +298,40 @@ class MidiInput():
         return conversion.mido_to_pretty_midi(midi)
 
 
+    ########################################
+    ###    INTERNAL METRONOME METHODS    ###
+    ########################################
 
-    ### UTILITY ###
+    def __init_metronome(self):
+        self.click = pygame.mixer.Sound(self.click_sound_file_path)
+        self.clock = pygame.time.Clock()
+        self.TICK = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.TICK, int(60000 / self.tempo))
+
+    def __count_in(self, beats = None):
+        if beats is None:
+            beats = self.default_time_signature[0]
+
+        self.beat_count = 0
+
+        while self.beat_count < beats:
+            self.__tick()
+
+    def __tick(self):
+        for event in pygame.event.get():
+            if event.type == self.TICK:
+                self.click.play()
+                self.beat_count += 1
+
+        self.clock.tick()
+
+
+
+
+    ########################################
+    ###            UTILITIES             ###
+    ########################################
+
     def length_of_bar_in_seconds(self):
         """
         Calculates the duration of one bar based on set tempo and time signature
