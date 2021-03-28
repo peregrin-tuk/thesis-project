@@ -256,7 +256,7 @@ class MidiInput():
         except IOError as error:
             print('Error: MIDI device disconnected - ' + str(error))
             self.close_port()
-            raise ConnectionError
+            raise ConnectionError from error
 
         # check if port still exists
         if self.port.name not in mido.get_input_names():
@@ -295,7 +295,7 @@ class MidiInput():
             return None
 
         print('\n[IO] recording successful.')
-        return conversion.mido_to_pretty_midi(midi)
+        return midi # TODO CHANGE BACK conversion.mido_to_pretty_midi(midi)
 
 
     ########################################

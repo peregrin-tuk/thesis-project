@@ -35,7 +35,21 @@ def music21_to_note_seq(melody: music21.stream.Stream):
 ### PrettyMIDI <-> Mido
 def mido_to_pretty_midi(melody: mido.MidiFile):
     tmp = muspy.from_mido(melody)
-    return muspy.to_pretty_midi(tmp)
+    tmp.resolution = melody.ticks_per_beat
+    pm = muspy.to_pretty_midi(tmp)
+    bpm = pm.get_tempo_changes()[1][0]
+    track_id = 0
+    for inst in pm.instruments:
+        note_id = 0
+        for note in inst.notes:
+            muspy_note = tmp.tracks[track_id].notes[note_id]
+            # note.start = pm.tick_to_time(muspy_note.time)
+            # note.end = pm.tick_to_time(muspy_note.time + muspy_note.duration)
+            note.start = mido.tick2second(muspy_note.time, melody.ticks_per_beat, mido.bpm2tempo(bpm))
+            note.end = mido.tick2second(muspy_note.time + muspy_note.duration, melody.ticks_per_beat, mido.bpm2tempo(bpm))
+            note_id += 1
+        track_id += 1
+    return pm
 
 def pretty_midi_to_mido(melody: PrettyMIDI):
     tmp = muspy.from_pretty_midi(melody)
