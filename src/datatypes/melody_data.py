@@ -13,11 +13,11 @@ class AdaptationMelodyData():
 
 class MelodyData():
 
-    def __init__(self, sequence: PrettyMIDI, sequence_type: SequenceType, meta: dict, evaluation_params: dict = None) -> None:
+    def __init__(self, sequence: PrettyMIDI, sequence_type: SequenceType, meta: dict, evaluation: dict = None) -> None:
         self.sequence = sequence
         self.sequence_type = sequence_type
         self.meta = meta
-        self.evaluation_params = evaluation_params
+        self.evaluation = evaluation
 
     def to_adaptation_data(self):
         stream = pretty_midi_to_music21(self.sequence)

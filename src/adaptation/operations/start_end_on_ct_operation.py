@@ -8,6 +8,7 @@ from src.analysis.harmonic import key
 from src.analysis.melodic import pitch_span
 
 class StartAndEndOnCTOperation(AbstractAdaptationOperation):
+    """Creates a chord based on the estimated key of the control sequence and transposes the first and last note of the base sequence so they are chord tones (e.g. 'c', 'e' or 'g' for a C major chord)."""
 
     def __init__(self):
         super().__init__()

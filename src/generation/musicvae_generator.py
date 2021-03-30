@@ -1,5 +1,6 @@
 import itertools
 import time
+from pathlib import Path
 from enum import Enum
 from magenta.models.music_vae import configs
 from magenta.models.music_vae.trained_model import TrainedModel
@@ -33,7 +34,7 @@ class MusicVAEGenerator(AbstractGenerator):
         self.model = TrainedModel(
             configs.CONFIG_MAP[str(checkpoint.name)],
             batch_size=batch_size,
-            checkpoint_dir_or_path=AbstractGenerator.models_base_path + '/vae/' + checkpoint.name + '.tar')
+            checkpoint_dir_or_path=str(AbstractGenerator.models_base_path) + '/vae/' + checkpoint.name + '.tar')
         t2 = time.time()
         
         print('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')

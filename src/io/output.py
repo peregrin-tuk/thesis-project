@@ -30,10 +30,12 @@
 
 from typing import List
 
+import music21
 from IPython.display import display, Audio, FileLink
 from pretty_midi import PrettyMIDI
 from visual_midi import Plotter, Preset
 from note_seq import NoteSequence, note_sequence_to_pretty_midi
+from src.io.conversion import pretty_midi_to_music21
 
 
 
@@ -83,6 +85,21 @@ def synthesizeMidi(midi: PrettyMIDI):
         display(Audio(midi.fluidsynth(fs=16000), rate=16000))
     else:
         print('[IO] Output error: The midi object is empty.')
+
+def playStream(stream: music21.stream.Stream):
+    """
+    docstring
+    """
+    sp = music21.midi.realtime.StreamPlayer(stream)
+    sp.play()
+
+def playPrettyMidi(midi: PrettyMIDI):
+    """
+    docstring
+    """
+    stream = pretty_midi_to_music21(midi)
+    sp = music21.midi.realtime.StreamPlayer(stream)
+    sp.play()
 
 
 def saveMidiFile(midi: PrettyMIDI, file_path: str, log: bool = True):

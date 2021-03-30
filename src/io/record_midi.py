@@ -273,10 +273,11 @@ class MidiInput():
         # TODO base time ticks on pygame clock (pygame.time.get_ticks() -> sollten Millisekunden sein, dann stimmts mit Metronom zam)
         if msg is not None:
             # play note
-            if msg.type is 'note_on':
-                self.midi_out.note_on(msg.note, msg.velocity)
-            elif msg.type is 'note_off':
-                self.midi_out.note_off(msg.note, msg.velocity)
+            if self.playback:
+                if msg.type is 'note_on':
+                    self.midi_out.note_on(msg.note, msg.velocity)
+                elif msg.type is 'note_off':
+                    self.midi_out.note_off(msg.note, msg.velocity)
             
             event_datetime = datetime.now()
             delta_time_in_seconds = (event_datetime - last_event_datetime).total_seconds()
@@ -302,7 +303,7 @@ class MidiInput():
             return None
 
         print('\n[IO] recording successful.')
-        return midi # TODO CHANGE BACK conversion.mido_to_pretty_midi(midi)
+        return conversion.mido_to_pretty_midi(midi)
 
 
     ########################################

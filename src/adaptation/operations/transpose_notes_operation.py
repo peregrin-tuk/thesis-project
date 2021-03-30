@@ -8,6 +8,7 @@ from src.analysis.harmonic import key
 from src.analysis.melodic import pitch_span
 
 class TransposeNotesOperation(AbstractAdaptationOperation):
+    """Estimates the key of both sequences and transposes every single note of the base sequence separately to the closest pitch that fits the key of the control sequence."""
 
     def __init__(self):
         super().__init__()
