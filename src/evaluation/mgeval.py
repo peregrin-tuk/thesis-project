@@ -1,8 +1,3 @@
-# analysis of midi sequence with mgeval
-
-# NOTE use np arrays for faster calculations afterwards?
-# TODO create analysis object with methods to nromalize etc? (object orientation always good idea)
-
 from typing import List
 
 import numpy as np
@@ -13,29 +8,41 @@ from note_seq import NoteSequence, note_sequence_to_pretty_midi, note_sequence_t
 import midi
 
 from definitions import ROOT_DIR
+from src.io.output import saveMidiFile
 from dependencies.mgeval import core, utils
 
 
-midi_file_cache = ROOT_DIR / Path('/midi/tmp/mgeval_cache.mid')
+midi_file_cache = str(ROOT_DIR / Path('midi\\tmp\\mgeval_cache.mid'))
 
 ###############################
 ###      FULL ANALYSIS      ###
 ###############################
 
-def analyze_sequence(note_seq: NoteSequence):
+def analyze_sequence(note_seq: NoteSequence, length_in_bars: int = None):
     note_sequence_to_midi_file(note_seq, midi_file_cache)
 
     feature = {'pretty_midi': note_sequence_to_pretty_midi(note_seq),
                'midi_pattern': midi.read_midifile(midi_file_cache)}
     bpm = note_seq.tempos[0].qpm if note_seq.tempos[0].qpm != 0 else 120
-    return __analyze(feature, bpm)
+    return __analyze(feature, bpm, length_in_bars)
 
 
-def analyze_midi(midi_file: str, length_in_bars: int = None):
+def analyze_pretty_midi(pm: PrettyMIDI, length_in_bars: int = None):
+    saveMidiFile(pm, midi_file_cache, log=False)
+
+    feature = {'pretty_midi': pm,
+               'midi_pattern': midi.read_midifile(midi_file_cache)}
+    tempo_list = feature['pretty_midi'].get_tempo_changes()
+    bpm = next((i for i, x in enumerate(tempo_list) if x != 0), 120)
+    return __analyze(feature, bpm, length_in_bars)
+
+
+def analyze_midi_file(midi_file: str, length_in_bars: int = None):
     feature = core.extract_feature(midi_file)
     tempo_list = feature['pretty_midi'].get_tempo_changes()
     bpm = next((i for i, x in enumerate(tempo_list) if x != 0), 120)
     return __analyze(feature, bpm, length_in_bars)
+
 
 
 def __analyze(feature, bpm: int, length_in_bars: int = None, normalize: bool = False):
@@ -49,15 +56,15 @@ def __analyze(feature, bpm: int, length_in_bars: int = None, normalize: bool = F
 
     return {
         'pitch_count': metrics.total_used_pitch(feature),
-        # 'pitch_count_per_bar': metrics.bar_used_pitch(feature, 1, length_in_bars), # TODO calculation in core seems to return wrong results
+        # 'pitch_count_per_bar': metrics.bar_used_pitch(feature, 1, length_in_bars), # CHECK calculation in core seems to return wrong results
         'pitch_class_histogram': metrics.total_pitch_class_histogram(feature),
-        'pitch_class_histogram_per_bar': metrics.bar_pitch_class_histogram(feature, 0, bpm, length_in_bars),
+        # 'pitch_class_histogram_per_bar': metrics.bar_pitch_class_histogram(feature, 0, bpm, length_in_bars), # CHECK only works when length in bars is given, should have reliable calculation here
         'pitch_class_transition_matrix': metrics.pitch_class_transition_matrix(feature),
         'avg_pitch_interval': metrics.avg_pitch_shift(feature),
         'pitch_range': metrics.pitch_range(feature),
 
         'note_count': metrics.total_used_note(feature),
-        # 'note_count_per_bar': metrics.bar_used_note(feature, 1, length_in_bars), # TODO calculation in core seems to return wrong results
+        # 'note_count_per_bar': metrics.bar_used_note(feature, 1, length_in_bars), # CHECK calculation in core seems to return wrong results
         'note_length_histogram': metrics.note_length_hist(feature, pause_event=True),
         'note_length_transition_matrix': metrics.note_length_transition_matrix(feature, pause_event=True),
         'avg_ioi': metrics.avg_IOI(feature),
@@ -94,6 +101,7 @@ def calc_intra_set_distances(set_of_sequences: List[dict]):
 ###     SINGLE FEATURES     ###
 ###############################
 
+'''
 def __get_pitch_count(midi_sequence: PrettyMIDI):
     pass
 
@@ -107,7 +115,6 @@ def __get_pitch_class_histogram_per_bar(midi_sequence: PrettyMIDI):
     pass
 
 def __get_pitch_class_transition_matrix(midi_sequence: PrettyMIDI):
-    # TODO normalization?
     pass
 
 def __get_avg_pitch_interval(midi_sequence: PrettyMIDI):
@@ -129,10 +136,10 @@ def __get_note_length_histogram(midi_sequence: PrettyMIDI):
     pass
 
 def __get_note_length_transition_matrix(midi_sequence: PrettyMIDI):
-    # TODO normalize?
     pass
 
 def __get_avg_ioi(midi_sequence: PrettyMIDI):
     pass
+'''
 
 # def get_ioi_range() ?

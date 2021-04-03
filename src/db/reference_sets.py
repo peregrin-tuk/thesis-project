@@ -44,19 +44,19 @@ def create_tables():
                                     song_name text NOT NULL,
                                     pair_number integer NOT NULL,
  
-                                    pitch_count_distance real NOT NULL,
-                                    pitch_count_per_bar_distance real NOT NULL,
-                                    pitch_class_histogram_distance real NOT NULL,
-                                    pitch_class_histogram_per_bar_distance real NOT NULL,
-                                    pitch_class_transition_matrix_distance real NOT NULL,
-                                    avg_pitch_interval_distance real NOT NULL,
-                                    pitch_range_distance real NOT NULL,
+                                    pitch_count real NOT NULL,
+                                    pitch_count_per_bar real NOT NULL,
+                                    pitch_class_histogram real NOT NULL,
+                                    pitch_class_histogram_per_bar real NOT NULL,
+                                    pitch_class_transition_matrix real NOT NULL,
+                                    avg_pitch_interval real NOT NULL,
+                                    pitch_range real NOT NULL,
 
-                                    note_count_distance real NOT NULL,
-                                    note_count_per_bar_distance real NOT NULL,
-                                    note_length_histogram_distance real NOT NULL,
-                                    note_length_transition_matrix_distance real NOT NULL,
-                                    avg_ioi_distance real NOT NULL,
+                                    note_count real NOT NULL,
+                                    note_count_per_bar real NOT NULL,
+                                    note_length_histogram real NOT NULL,
+                                    note_length_transition_matrix real NOT NULL,
+                                    avg_ioi real NOT NULL,
 
                                     FOREIGN KEY (set_id) REFERENCES reference_sets (id)
                                 );"""
@@ -101,19 +101,19 @@ def store_ref_data(
         song_name (str): 
         pair_number (int): 
 
-        pitch_count_distance (float): 
-        pitch_count_per_bar_distance (float): 
-        pitch_class_histogram_distance (float): 
-        pitch_class_histogram_per_bar_distance (float): 
-        pitch_class_transition_matrix_distance (float): 
-        avg_pitch_interval_distance (float): 
-        pitch_range_distance (float): 
+        pitch_count (float): 
+        pitch_count_per_bar (float): 
+        pitch_class_histogram (float): 
+        pitch_class_histogram_per_bar (float): 
+        pitch_class_transition_matrix (float): 
+        avg_pitch_interval (float): 
+        pitch_range (float): 
 
-        note_count_distance (float): 
-        note_count_per_bar_distance (float): 
-        note_length_histogram_distance (float): 
-        note_length_transition_matrix_distance (float): 
-        avg_ioi_distance (float): 
+        note_count (float): 
+        note_count_per_bar (float): 
+        note_length_histogram (float): 
+        note_length_transition_matrix (float): 
+        avg_ioi (float): 
 
     Returns:
         int: id of the inserted row
@@ -125,18 +125,18 @@ def store_ref_data(
                                 set_id,
                                 song_name,
                                 pair_number,
-                                pitch_count_distance, 
-                                pitch_count_per_bar_distance, 
-                                pitch_class_histogram_distance, 
-                                pitch_class_histogram_per_bar_distance, 
-                                pitch_class_transition_matrix_distance, 
-                                avg_pitch_interval_distance, 
-                                pitch_range_distance, 
-                                note_count_distance, 
-                                note_count_per_bar_distance, 
-                                note_length_histogram_distance, 
-                                note_length_transition_matrix_distance, 
-                                avg_ioi_distance)
+                                pitch_count, 
+                                pitch_count_per_bar, 
+                                pitch_class_histogram, 
+                                pitch_class_histogram_per_bar, 
+                                pitch_class_transition_matrix, 
+                                avg_pitch_interval, 
+                                pitch_range, 
+                                note_count, 
+                                note_count_per_bar, 
+                                note_length_histogram, 
+                                note_length_transition_matrix, 
+                                avg_ioi)
                                 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     cursor.execute(sql_insert_ref_data, (
@@ -264,7 +264,7 @@ def fetch_ref_set_by_id(index: int):
     Returns:
         sqlite3.Row: row object with the midi entry
     """
-    sql_fetch_set = """SELECT * from reference_set where id = ?"""
+    sql_fetch_set = """SELECT * from reference_sets where id = ?"""
 
     conn = create_connection()
     c = conn.cursor()
@@ -311,3 +311,7 @@ def ref_set_stats_to_dataframe(index: int):
     conn.close()
 
     return pd.read_json(stats[0], orient="index")
+
+def get_normalization_values_of_ref_set(index: int):
+    reference_set = ref_set_stats_to_dataframe(1)
+    return reference_set.loc[['0.5']].to_dict('records')[0]
