@@ -15,10 +15,10 @@ class StartAndEndOnCTOperation(AbstractAdaptationOperation):
         self.required_analysis = { key }
 
 
-    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
+    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData):
         t1 = time.time()
 
-        control_key = control_analysis[key.__name__]
+        control_key = control.analysis[key.__name__]
         base_span = pitch_span(base.sequence)
 
         # get the chord of the control_key at a range around the span of the base sequence
@@ -37,4 +37,5 @@ class StartAndEndOnCTOperation(AbstractAdaptationOperation):
         adapted_sequence.flat.notes[-0].pitch.ps = last_ps
 
         t2 = time.time()
-        return super().create_meta_and_update_base(base, self.__class__.__name__, t2-t1, adapted_sequence)
+        base_analysis = { pitch_span.__name__: base_span }
+        return super().create_meta_and_update_base(base, self.__class__.__name__, t2-t1, adapted_sequence, base_analysis)

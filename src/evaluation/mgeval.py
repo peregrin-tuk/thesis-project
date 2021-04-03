@@ -1,33 +1,7 @@
 # analysis of midi sequence with mgeval
 
 # NOTE use np arrays for faster calculations afterwards?
-# TODO normalize everything?
 # TODO create analysis object with methods to nromalize etc? (object orientation always good idea)
-
-
-# methods:
-# analyse_sequence(pretty_midi): dict with all features
-# get_pitch_count(pretty_midi): int
-#   -> just wrapper around total_used_pitch
-# get_pitch_count_per_bar(pretty_midi): list of int
-#   -> get num_bars by time signature and tempo etc -> check returned object
-# get_pitch_class_histogram(): list of float
-# get_pitch_class_histograms_per_bar: np.array ?
-#   -> can be normalized using note_count
-# get_pitch_class_transition_matrix(): 12x12 n array
-#   -> directly use normalized version?
-# get_pitch_range(): interval in half tones as int
-# get_avg_interval(): float - avg interval between notes
-
-# get_note_count(): int
-# get_note_count_per_bar(): list of int
-# get_avg_ioi(): float - avg note length as IOI
-# get_note_length_histogram(): list of float or int
-#   -> TODO with pauses?
-# get_note_length_transition_matrix():   12x12 np array
-#   -> directly use normalized version? with pauses?
-
-# distance calculations
 
 from typing import List
 
@@ -44,8 +18,9 @@ from dependencies.mgeval import core, utils
 
 midi_file_cache = ROOT_DIR / Path('/midi/tmp/mgeval_cache.mid')
 
-
-#### FULL ANALYSIS ####
+###############################
+###      FULL ANALYSIS      ###
+###############################
 
 def analyze_sequence(note_seq: NoteSequence):
     note_sequence_to_midi_file(note_seq, midi_file_cache)
@@ -74,7 +49,7 @@ def __analyze(feature, bpm: int, length_in_bars: int = None, normalize: bool = F
 
     return {
         'pitch_count': metrics.total_used_pitch(feature),
-        'pitch_count_per_bar': 0.0, # metrics.bar_used_pitch(feature, 1, length_in_bars), # TODO calculation in core seems to return wrong results
+        # 'pitch_count_per_bar': metrics.bar_used_pitch(feature, 1, length_in_bars), # TODO calculation in core seems to return wrong results
         'pitch_class_histogram': metrics.total_pitch_class_histogram(feature),
         'pitch_class_histogram_per_bar': metrics.bar_pitch_class_histogram(feature, 0, bpm, length_in_bars),
         'pitch_class_transition_matrix': metrics.pitch_class_transition_matrix(feature),
@@ -82,14 +57,16 @@ def __analyze(feature, bpm: int, length_in_bars: int = None, normalize: bool = F
         'pitch_range': metrics.pitch_range(feature),
 
         'note_count': metrics.total_used_note(feature),
-        'note_count_per_bar': 0.0, # metrics.bar_used_note(feature, 1, length_in_bars), # TODO calculation in core seems to return wrong results
+        # 'note_count_per_bar': metrics.bar_used_note(feature, 1, length_in_bars), # TODO calculation in core seems to return wrong results
         'note_length_histogram': metrics.note_length_hist(feature, pause_event=True),
         'note_length_transition_matrix': metrics.note_length_transition_matrix(feature, pause_event=True),
         'avg_ioi': metrics.avg_IOI(feature),
     }
 
 
-#### DISTANCE CALCULATION ####
+###############################
+###   DISTANCE CALCULATION  ###
+###############################
 
 def calc_distances(metrics1: dict, metrics2: dict):
     distances = {}
@@ -112,7 +89,10 @@ def calc_intra_set_distances(set_of_sequences: List[dict]):
     return intra_set_distances
 
 
-#### SINGLE FEATURES ####
+
+###############################
+###     SINGLE FEATURES     ###
+###############################
 
 def __get_pitch_count(midi_sequence: PrettyMIDI):
     pass

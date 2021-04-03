@@ -16,14 +16,15 @@ class AbstractAdaptationOperation(ABC):
         self.required_analysis = set()
 
     @abstractmethod
-    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
+    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData):
         raise NotImplementedError
 
-    def create_meta_and_update_base(self, base: AdaptationMelodyData, name: str, duration: float, adapted_sequence: music21.stream.Stream):
+    def create_meta_and_update_base(self, base: AdaptationMelodyData, name: str, duration: float, adapted_sequence: music21.stream.Stream, base_analysis: dict):
         base.sequence = adapted_sequence
-        base.meta.setdefault('adaptation_steps',[]).append({
+        base.meta.setdefault('steps',[]).append({
             'name': name,
             'duration': duration,
             'intermediate_result': adapted_sequence
         })
+        base.analysis.update(base_analysis)
         return base

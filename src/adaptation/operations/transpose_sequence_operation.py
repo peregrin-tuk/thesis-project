@@ -12,14 +12,15 @@ class TransposeSequenceOperation(AbstractAdaptationOperation):
         super().__init__()
         self.required_analysis = { key }
 
-    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
+    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData):
         t1 = time.time()
 
         base_key = key(base.sequence)
-        control_key = control_analysis[key.__name__]
+        control_key = control.analysis[key.__name__]
 
         i = Interval(base_key.tonic, control_key.tonic)
         adapted_sequence = base.sequence.transpose(i)
 
         t2 = time.time()
-        return super().create_meta_and_update_base(base, self.__class__.__name__, t2-t1, adapted_sequence)
+        base_analysis = { key.__name__: base_key }
+        return super().create_meta_and_update_base(base, self.__class__.__name__, t2-t1, adapted_sequence, base_analysis)

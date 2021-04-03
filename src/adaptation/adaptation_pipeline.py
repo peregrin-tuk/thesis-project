@@ -37,23 +37,22 @@ class AdaptationPipeline(AbstractAdaptationOperation):
             return [op.__class__ for op in self.__operations]
 
 
-    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
+    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData):
         """
         Executes all operations in the pipeline on the provided source input.
 
         Args:
             base (AdaptationMelodyData): midi sequence to be adapted
             control (AdaptationMelodyData): midi sequence to which the base sequence should be adapted to
-            control_analysis (dict): analysis data of the control sequence
 
         Returns:
             AdaptationMelodyData: Adapted source sequence. Its meta data contains a list of applied adaptations as well as the durations of their execution.
         """
         t1 = time.time()
         for operation in self.__operations:
-            base = operation.execute(base, control, control_analysis)
+            base = operation.execute(base, control)
         t2 = time.time()
 
-        base.meta['adaptation_duration'] = t2-t1
+        base.meta['total_duration'] = t2-t1
 
         return base

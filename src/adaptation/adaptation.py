@@ -43,10 +43,15 @@ class Adaptation():
     def adapt(self, base: MelodyData, control: MelodyData):
         adapt_base = base.to_adaptation_data()
         adapt_control = control.to_adaptation_data()
+
         control_analysis = analyze(adapt_control, self.pipeline.required_analysis)
-        adapted_sequence = self.pipeline.execute(adapt_base, adapt_control, control_analysis)
+        adapt_control.analysis.update(control_analysis)
+
+        adapted_sequence = self.pipeline.execute(adapt_base, adapt_control)
+        print('META', adapted_sequence.meta)
         base.update_sequence_from_adaptation_data(adapted_sequence)
-        return base
+        control.update_sequence_from_adaptation_data(adapt_control)
+        return base, control
 
 
     def __load_operations_from_module(self):

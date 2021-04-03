@@ -14,10 +14,10 @@ class TransposeNotesOperation(AbstractAdaptationOperation):
         super().__init__()
         self.required_analysis = { key }
 
-    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData, control_analysis: dict):
+    def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData):
         t1 = time.time()
 
-        control_key = control_analysis[key.__name__]
+        control_key = control.analysis[key.__name__]
         base_span = pitch_span(base.sequence)
 
         # get scale pitches in range of [lowest base note - 2 semitones; highest base note + 2 semitones]
@@ -31,7 +31,8 @@ class TransposeNotesOperation(AbstractAdaptationOperation):
                 n.pitch.ps = ps
 
         t2 = time.time()
-        return super().create_meta_and_update_base(base, self.__class__.__name__, t2-t1, base.sequence)
+        base_analysis = { pitch_span.__name__: base_span }
+        return super().create_meta_and_update_base(base, self.__class__.__name__, t2-t1, base.sequence, base_analysis)
 
 
         
