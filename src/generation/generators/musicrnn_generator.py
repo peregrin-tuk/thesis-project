@@ -31,7 +31,7 @@ class MusicRNNGenerator(AbstractGenerator):
 
         t1 = time.time()
         self.checkpoint = checkpoint
-        bundle = sequence_generator_bundle.read_bundle_file(AbstractGenerator.models_base_path + '/rnn/' + checkpoint.name + '.mag')
+        bundle = sequence_generator_bundle.read_bundle_file(str(AbstractGenerator.models_base_path) + '/rnn/' + checkpoint.name + '.mag')
         generator_map = melody_rnn_sequence_generator.get_generator_map()
         self.model = generator_map[checkpoint.name](checkpoint=None, bundle=bundle)
         self.model.initialize()

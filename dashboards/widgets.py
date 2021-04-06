@@ -17,10 +17,17 @@ inputHeading = widgets.HTML(
     placeholder='Select Input Melody',
 )
 
-inputSelect = widgets.ToggleButtons(
-    options=['Twinkle, Twinkle', 'Toto - Africa', 'Mozart - Eine kleine Nachtmusik', 'Mancini - Pink Panther'],
+# inputSelect = widgets.ToggleButtons(
+#     options=['Twinkle, Twinkle', 'Toto - Africa', 'Mozart - Eine kleine Nachtmusik', 'Mancini - Pink Panther'],
+#     description='Select Input:',
+#     tooltips=['2 Bars', '2 Bars from the Intro', '4 Bars Main Theme', '4 Bars Main Theme'],
+#     style=style
+# )
+
+inputSelect = widgets.Dropdown(
+    options=[('...', 1)],
+    value=1,
     description='Select Input:',
-    tooltips=['2 Bars', '2 Bars from the Intro', '4 Bars Main Theme', '4 Bars Main Theme'],
     style=style
 )
 
@@ -39,13 +46,8 @@ generationHeading = widgets.HTML(
 )
 
 checkpointSelect = widgets.Dropdown(
-    options=[('MusicVAE - cat-mel_2bar', 1), 
-             ('MusicVAE - hierdec-mel_16bar', 2), 
-             ('MusicRNN - Mono', 3),
-             ('MusicRNN - Attention', 4),
-             ('MusicRNN - Lookback', 5)
-            ],
-    value=2,
+    options=[('...', 1)],
+    value=1,
     # description='Model & Checkpoint:',
     style=style
 )

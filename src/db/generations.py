@@ -9,8 +9,8 @@ from pretty_midi import PrettyMIDI
 from definitions import ROOT_DIR, SequenceType
 from src.io.output import saveMidiFile
 
-db_path = ROOT_DIR / Path('/data/generations.db')
-midi_dir_path = ROOT_DIR / Path('/data/generation_files')
+db_path = ROOT_DIR / Path('data/generations.db')
+midi_dir_path = ROOT_DIR / Path('data/generation_files')
 
 
 def create_connection():
@@ -35,7 +35,7 @@ def create_tables():
                                     midi_file text NOT NULL,
                                     type integer NOT NULL,
                                     date_created timestamp NOT NULL,
-                                    analysis text
+                                    analysis text,
                                     evaluation text
                                 );"""
 
@@ -127,7 +127,7 @@ def store_generation_result(
 
 
 
-def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = None):
+def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = None, evaluation: JSON = None):
     """ 
     Adds a database entry for a midi file and stores the corresponding file in the file system.
 
@@ -151,7 +151,7 @@ def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = N
 
     sql_update_filepath = """UPDATE midi_analysis SET midi_file = ? WHERE id = ?"""
 
-    cursor.execute(sql_insert_midi, (file_path, date, sequence_type.name, analysis))
+    cursor.execute(sql_insert_midi, (file_path, date, sequence_type.name, analysis, evaluation))
 
     # check id
     last_id = cursor.lastrowid 

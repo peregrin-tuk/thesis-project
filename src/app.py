@@ -1,3 +1,4 @@
+from pathlib import Path
 from ipywidgets import Output
 from definitions import SequenceType
 from src.io.input import loadMidiFile
@@ -10,9 +11,18 @@ from src.db import generations as db
 from src.db.reference_sets import fetch_ref_set_by_id, get_normalization_values_of_ref_set
 from src.evaluation.evaluation import Evaluation
 from src.io.conversion import note_seq_to_pretty_midi
+from definitions import ROOT_DIR
 
 
 class App:
+
+    demo_melodies = [
+        ('Twinkle, Twinkle', str(ROOT_DIR / Path('midi/examples/monophonic/twinkle1_4b.mid')) ),
+        ('Toto: Africa', str(ROOT_DIR / Path('midi/examples/monophonic/africa_intro_2b.mid')) ),
+        ('Mancini: Pink Panther', str(ROOT_DIR / Path('midi/examples/monophonic/pinkpanther_4b.mid')) ),
+        ('Mozart: Eine kleine Nachtmusik', str(ROOT_DIR / Path('midi/examples/monophonic/mozart1_4b.mid')) ),
+        ('Queen: Bohemian Rhapsody', str(ROOT_DIR / Path('midi/examples/monophonic/bohemian_mama_4b.mid')) ),
+    ]
 
     def __init__(self, log: Output):
         self.log = log
@@ -22,8 +32,8 @@ class App:
         self.checkpoint = None
         self.temperature = None
 
-        # set default normalization values
-        self.set_similarity_reference(1)
+        self.get_generators()
+        self.set_similarity_reference(1) # set default normalization values
 
 
     def get_adaptation_operations(self):
@@ -42,7 +52,11 @@ class App:
         return generator_list
 
 
-    def apply_settings(self, generator: AbstractGenerator, checkpoint: str, temperature: float, steps: list):
+    def get_demo_input(self):
+        return self.demo_melodies
+
+
+    def apply_settings(self, generator_id: int, temperature: float, steps: list):
         self.__clear_log()
         self.__log("Saving settings ...")
 
@@ -53,8 +67,13 @@ class App:
         self.temperature = temperature
 
         # initialize checkpoint if changed
+        generator = self.generator_list[generator_id][1]
+        checkpoint = self.generator_list[generator_id][2]
+
         if generator != self.generator or checkpoint != self.checkpoint:
-            self.__log("Initializing generation model...")
+            self.__log("Initializing generation model. This may take 1 (RNN) to 4 (VAE) minutes...")
+            print(generator)
+            print(checkpoint)
             self.generator = generator(checkpoint)
             self.checkpoint = checkpoint
 
@@ -79,7 +98,7 @@ class App:
 
         # run generation
         self.__log("Generating base melody for adaptation...")
-        gen_base = self.generator.generate(length_in_beats = 16, temperature=self.temperature)
+        gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
         gen_data = MelodyData(note_seq_to_pretty_midi(gen_base['sequence']), SequenceType.GEN_BASE, { 'generation': gen_base['meta'] })
 
         # run adaptation
@@ -93,11 +112,11 @@ class App:
                 input_data.sequence,
                 gen_data.sequence,
                 result.sequence,
-                gen_dur = result.meta.generation.gen_dur,
-                gen_model = result.meta.generation.model + ' ' + result.meta.generation.checkpoint,
-                gen_temperature = result.meta.generation.temperature,
-                adapt_steps = result.meta.adaptation.steps,
-                adapt_dur = result.meta.adaptation.total_duration)
+                gen_dur = result.meta['generation']['gen_dur'],
+                gen_model = result.meta['generation']['model'] + ' ' + result.meta['generation']['checkpoint'],
+                gen_temperature = result.meta['generation']['temperature'],
+                adapt_steps = result.meta['adaptation']['steps'],
+                adapt_dur = result.meta['adaptation']['total_duration'])
 
         self.__log("Done.")
 
