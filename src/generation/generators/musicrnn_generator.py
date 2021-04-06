@@ -5,22 +5,23 @@ from magenta.models.melody_rnn import melody_rnn_sequence_generator
 from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
 from note_seq import NoteSequence, extract_subsequence, trim_note_sequence
-from . import AbstractGenerator
+from src.generation import AbstractGenerator
 
 _CHECKPOINTS = {
     1: ['attention_rnn',  'ATTENTION'],
     2: ['lookback_rnn', 'LOOKBACK'],
     2: ['mono_rnn', 'MONO'],
 }
-Checkpoint = Enum(
-    value='Checkpoint',
-    names=itertools.chain.from_iterable(
-        itertools.product(v, [k]) for k, v in _CHECKPOINTS.items()
-    )
-)
 
 
 class MusicRNNGenerator(AbstractGenerator):
+
+    Checkpoint = Enum(
+        value='Checkpoint',
+        names=itertools.chain.from_iterable(
+            itertools.product(v, [k]) for k, v in _CHECKPOINTS.items()
+        )
+    )
 
     def __init__(self, checkpoint=Checkpoint.ATTENTION):
         super().__init__()

@@ -70,12 +70,26 @@ stepsSelect = widgets.SelectMultiple(
     options=['Operation 1', 'Operation 2', 'Operation 3'],
     #value=['Oranges'], # set to last selected ?
     #rows=10, # set to len(ops)
-    description='Steps',
+    #description='Steps',
+)
+
+
+### BUTTONS ###
+
+button_layout = Layout(margin='20px 0')
+
+applySettingsButton = widgets.Button(
+    description='  APPLY SETTINGS',
+    disabled=False,
+    button_style='info',
+    icon='gear',
+    layout=button_layout
 )
 
 startButton = widgets.Button(
     description='  RUN',
     disabled=False,
     button_style='success',
-    icon='play'
+    icon='play',
+    layout=button_layout
 )

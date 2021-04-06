@@ -1,28 +1,29 @@
 import time
+import itertools
+from enum import Enum
 from pathlib import Path
 import tensorflow as tf
-from enum import Enum
 from magenta.models.music_vae import data
 from magenta.models.music_vae.configs import CONFIG_MAP as VAE_CONFIG_MAP
 from note_seq import midi_to_note_sequence
 from .midime.midime_train import train
 from .midime.trained_model import TrainedModel
 from .midime.configs import CONFIG_MAP, update_config
-from . import AbstractGenerator
+from src.generation import AbstractGenerator
 from definitions import ROOT_DIR
 
 _CHECKPOINTS = {
     1: ['cat-mel_2bar_big',  'MEL_2BAR'],
 }
-Checkpoint = Enum(
+
+class MidiMeGenerator(AbstractGenerator):
+
+    Checkpoint = Enum(
     value='Checkpoint',
     names=itertools.chain.from_iterable(
         itertools.product(v, [k]) for k, v in _CHECKPOINTS.items()
     )
 )
-
-class MidiMeGenerator(AbstractGenerator):
-
     checkpoint = 'cat-mel_2bar_big'
     config = CONFIG_MAP['ae-' + checkpoint]
     vae_config = VAE_CONFIG_MAP[checkpoint]

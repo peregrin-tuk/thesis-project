@@ -84,7 +84,7 @@ class App:
 
         # run adaptation
         self.__log("Adapting generated melody to input...")
-        result = self.adaption.adapt(gen_data, input_data)
+        result, gen_data = self.adaptation.adapt(gen_data, input_data)
 
         # store data in db
         self.__log("Saving results to database...")
