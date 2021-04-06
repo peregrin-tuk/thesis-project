@@ -1,3 +1,3 @@
 from .abstract_generator import AbstractGenerator
-from . import generators
+from .generators import *
 from .generation import *

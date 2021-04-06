@@ -1,4 +1,3 @@
-from src.io.conversion import note_seq_to_pretty_midi
 from ipywidgets import Output
 from definitions import SequenceType
 from src.io.input import loadMidiFile
@@ -7,6 +6,10 @@ from src.datatypes.call_response_set import CallResponseSet
 from src.generation.abstract_generator import AbstractGenerator
 from src.adaptation import Adaptation
 from src.generation import get_available_generators
+from src.db import generations as db
+from src.db.reference_sets import fetch_ref_set_by_id, get_normalization_values_of_ref_set
+from src.evaluation.evaluation import Evaluation
+from src.io.conversion import note_seq_to_pretty_midi
 
 
 class App:
@@ -18,6 +21,9 @@ class App:
         self.generator = None
         self.checkpoint = None
         self.temperature = None
+
+        # set default normalization values
+        self.set_similarity_reference(1)
 
 
     def get_adaptation_operations(self):
@@ -38,7 +44,7 @@ class App:
 
     def apply_settings(self, generator: AbstractGenerator, checkpoint: str, temperature: float, steps: list):
         self.__clear_log()
-    	self.__log("Saving settings ...")
+        self.__log("Saving settings ...")
 
         # set adaptation steps
         self.adaptation.construct_pipeline(steps)
@@ -53,6 +59,14 @@ class App:
             self.checkpoint = checkpoint
 
         self.__log("Done.")
+
+
+    def set_similarity_reference(self, ref_set_id: int):
+        normalization_values = get_normalization_values_of_ref_set(ref_set_id)
+        self.evaluation = Evaluation(normalization_values)
+
+        ref_set = fetch_ref_set_by_id(ref_set_id)
+        self.ref_set = ref_set['name'] + ' (' + ref_set['source'] + ')'
 
 
     def run(self, input_file_path: str, store_results: bool = True):
@@ -75,13 +89,33 @@ class App:
         # store data in db
         self.__log("Saving results to database...")
         if store_results:
-            # TODO
-            pass
+            db.store_generation_result(
+                input_data.sequence,
+                gen_data.sequence,
+                result.sequence,
+                gen_dur = result.meta.generation.gen_dur,
+                gen_model = result.meta.generation.model + ' ' + result.meta.generation.checkpoint,
+                gen_temperature = result.meta.generation.temperature,
+                adapt_steps = result.meta.adaptation.steps,
+                adapt_dur = result.meta.adaptation.total_duration)
 
         self.__log("Done.")
+
+        # evaluate
+        generation_similarity = self.evaluation.evaluate_similarity(gen_data.sequence, input_data.sequence)
+        output_similarity = self.evaluation.evaluate_similarity(result.sequence, input_data.sequence)
+
         # return data for interface as call-response-set
-        # (input, gen_base, output, sim base + output, gen meta, adapt meta)
-        # TODO
+        return CallResponseSet(self.generator,
+                               self.checkpoint,
+                               input_data,
+                               gen_data,
+                               result,
+                               input_data.analysis,
+                               self.adaptation.pipeline.get_operations,
+                               generation_similarity,
+                               output_similarity)
+
 
     def __log(self, msg: str):
         with self.log:
