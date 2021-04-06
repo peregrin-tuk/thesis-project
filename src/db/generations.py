@@ -36,6 +36,7 @@ def create_tables():
                                     type integer NOT NULL,
                                     date_created timestamp NOT NULL,
                                     analysis text
+                                    evaluation text
                                 );"""
 
     sql_generations_table = """CREATE TABLE IF NOT EXISTS generation_results (
@@ -48,7 +49,7 @@ def create_tables():
                                     gen_model text NOT NULL,
                                     gen_temperature real NOT NULL,
                                     adapt_dur real NOT NULL,
-                                    adapt_settings text,
+                                    adapt_steps text,
                                     FOREIGN KEY (input_id) REFERENCES midi_analysis (id),
                                     FOREIGN KEY (gen_base_id) REFERENCES midi_analysis (id),
                                     FOREIGN KEY (output_id) REFERENCES midi_analysis (id)
@@ -61,7 +62,6 @@ def create_tables():
                                     notes text
                                 );"""
 
-    # TODO add analysis and evaluation parameters as columns
     # NOTE analysis and adapt_settings are here expected to be json objects
     # NOTE instead of adding new nullable columns for new features, consider creating a whole new DB with the new version
 
@@ -88,7 +88,7 @@ def store_generation_result(
     gen_model: str,
     gen_temperature: float,
     adapt_dur: float,
-    adapt_settings: dict = None,
+    adapt_steps: dict = None,
     in_recorded: bool = True
 ):
     """ 
@@ -102,7 +102,7 @@ def store_generation_result(
         gen_model (str): checkpoint of the used generation model
         gen_temperature (float): temperature used for the generation model
         adapt_dur (float): duration of the adaption
-        adapt_settings (dict, optional): default = None
+        adapt_steps (dict, optional): default = None
         in_recorded (bool, optional): default = True
 
     Returns:
@@ -112,7 +112,7 @@ def store_generation_result(
     cursor = conn.cursor()
     date = datetime.now()
 
-    sql_insert_generation = """INSERT INTO generation_results(input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_settings)
+    sql_insert_generation = """INSERT INTO generation_results(input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps)
               VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     input_type = SequenceType.REC_INPUT if in_recorded else SequenceType.EXAMPLE
@@ -120,7 +120,7 @@ def store_generation_result(
     gen_base_id = store_midi(gen_base_midi, SequenceType.GEN_BASE)
     output_id = store_midi(output_midi, SequenceType.OUTPUT)
 
-    cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_settings))
+    cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps))
     
     conn.commit()
     return cursor.lastrowid
@@ -135,6 +135,7 @@ def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = N
         midi (PrettyMIDI):  sequence as midi object
         type (connection.SequenceType): role of the midi sequence, enum of REC_INPUT, EXAMPLE, GEN_BASE or OUTPUT
         analysis (dict, optional): music analysis data, default = None
+        evaluation (dict, optional): input similarity evaluation data, default = None
 
     Returns:
         int: id of the inserted row
@@ -145,8 +146,8 @@ def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = N
     index = cursor.lastrowid + 1 if cursor.lastrowid is not None else 0 
     file_path = '{:03d}_'.format(index) + date.strftime("%Y-%m-%d-%H-%M") + '_{}.mid'.format(sequence_type.name) # save midis as ###(id)_####-##-##-##-##(date)_(type).mid
 
-    sql_insert_midi = """INSERT INTO midi_analysis(midi_file, date_created, type, analysis)
-              VALUES(?, ?, ?, ?)"""
+    sql_insert_midi = """INSERT INTO midi_analysis(midi_file, date_created, type, analysis, evaluation)
+              VALUES(?, ?, ?, ?, ?)"""
 
     sql_update_filepath = """UPDATE midi_analysis SET midi_file = ? WHERE id = ?"""
 

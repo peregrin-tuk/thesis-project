@@ -14,10 +14,10 @@ class AdaptationMelodyData():
 
 class MelodyData():
 
-    def __init__(self, sequence: PrettyMIDI, sequence_type: SequenceType, meta: dict, analysis: dict = None, evaluation: dict = None) -> None:
+    def __init__(self, sequence: PrettyMIDI, sequence_type: SequenceType, meta: dict = None, analysis: dict = None, evaluation: dict = None) -> None:
         self.sequence = sequence
         self.sequence_type = sequence_type
-        self.meta = meta
+        self.meta = meta if meta is not None else {}
         self.analysis = analysis if analysis is not None else {}
         self.evaluation = evaluation if evaluation is not None else {}
 

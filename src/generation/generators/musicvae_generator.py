@@ -1,27 +1,27 @@
+
 import itertools
 import time
-from pathlib import Path
 from enum import Enum
 from magenta.models.music_vae import configs
 from magenta.models.music_vae.trained_model import TrainedModel
-from . import AbstractGenerator
+from src.generation import AbstractGenerator
 
 _CHECKPOINTS = {
     1: ['cat-mel_2bar_big',  'MEL_2BAR'],
     2: ['hierdec-mel_16bar', 'MEL_16BAR'],
 }
-Checkpoint = Enum(
-    value='Checkpoint',
-    names=itertools.chain.from_iterable(
-        itertools.product(v, [k]) for k, v in _CHECKPOINTS.items()
-    )
-)
 
 
 class MusicVAEGenerator(AbstractGenerator):
     """
     docstring
     """
+    Checkpoint = Enum(
+        value='Checkpoint',
+        names=itertools.chain.from_iterable(
+            itertools.product(v, [k]) for k, v in _CHECKPOINTS.items()
+        )
+    )
 
     def __init__(self, checkpoint=Checkpoint.MEL_2BAR, batch_size=4):
         super().__init__()
