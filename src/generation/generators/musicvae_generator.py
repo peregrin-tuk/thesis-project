@@ -23,10 +23,11 @@ class MusicVAEGenerator(AbstractGenerator):
         )
     )
 
-    def __init__(self, checkpoint=Checkpoint.MEL_2BAR, batch_size=4):
+    def __init__(self, checkpoint=Checkpoint.MEL_2BAR, batch_size=4, log=None):
         super().__init__()
+        self.log = log
 
-        print("[GEN] Initializing Music VAE with checkpoint '" +
+        self.__log("[GEN] Initializing Music VAE with checkpoint '" +
               checkpoint.name + "'...")
 
         t1 = time.time()
@@ -37,7 +38,15 @@ class MusicVAEGenerator(AbstractGenerator):
             checkpoint_dir_or_path=str(AbstractGenerator.models_base_path) + '/vae/' + checkpoint.name + '.tar')
         t2 = time.time()
         
-        print('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
+        self.__log('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
+
+
+    def __log(self, msg: str):
+        if self.log is None:
+            print(msg)
+        else:
+            with self.log:
+                print(msg)
 
 
     def generate(self, length_in_quarters=16, temperature=0.4):

@@ -72,9 +72,7 @@ class App:
 
         if generator != self.generator or checkpoint != self.checkpoint:
             self.__log("Initializing generation model. This may take 1 (RNN) to 4 (VAE) minutes...")
-            print(generator)
-            print(checkpoint)
-            self.generator = generator(checkpoint)
+            self.generator = generator(checkpoint, log=self.log)
             self.checkpoint = checkpoint
 
         self.__log("Done.")
@@ -105,24 +103,20 @@ class App:
         self.__log("Adapting generated melody to input...")
         result, gen_data = self.adaptation.adapt(gen_data, input_data)
 
+        # evaluate
+        generation_similarity = self.evaluation.evaluate_similarity(gen_data.sequence, input_data.sequence)
+        output_similarity = self.evaluation.evaluate_similarity(result.sequence, input_data.sequence)
+        gen_data.evaluation = generation_similarity
+        result.evaluation = output_similarity
+
         # store data in db
         self.__log("Saving results to database...")
         if store_results:
             db.store_generation_result(
-                input_data.sequence,
-                gen_data.sequence,
-                result.sequence,
-                gen_dur = result.meta['generation']['gen_dur'],
-                gen_model = result.meta['generation']['model'] + ' ' + result.meta['generation']['checkpoint'],
-                gen_temperature = result.meta['generation']['temperature'],
-                adapt_steps = result.meta['adaptation']['steps'],
-                adapt_dur = result.meta['adaptation']['total_duration'],
-                in_recorded = False) 
+                input_data,
+                gen_data,
+                result) 
         self.__log("Done.")
-
-        # evaluate
-        generation_similarity = self.evaluation.evaluate_similarity(gen_data.sequence, input_data.sequence)
-        output_similarity = self.evaluation.evaluate_similarity(result.sequence, input_data.sequence)
 
         # return data for interface as call-response-set
         return CallResponseSet(self.generator,

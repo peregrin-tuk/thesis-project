@@ -17,9 +17,8 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 df = db.ref_set_stats_to_dataframe(1).T
-
-# fig = px.box(df, x=df.index, y="pitch_count_distance")
 fig = px.line_polar(df, r='0.5', theta=df.index, line_close=True)
+# fig = px.box(df, x=df.index, y="pitch_count_distance")
 
 app.layout = html.Div(children=[
     html.H1(children="Reference Data for Similarity"),

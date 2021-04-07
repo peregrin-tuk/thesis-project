@@ -110,7 +110,10 @@ def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, r
     adapt_steps = result_data.meta['adaptation']['steps']
     adapt_dur = result_data.meta['adaptation']['total_duration']
 
-    cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, json.dumps(adapt_steps)))
+    adapt_steps_json =  json.dumps(dict_values_to_string(adapt_steps))
+
+
+    cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps_json))
     
     conn.commit()
     return cursor.lastrowid
@@ -131,15 +134,17 @@ def store_midi(data: MelodyData):
     cursor = conn.cursor()
     date = datetime.now()
     index = cursor.lastrowid + 1 if cursor.lastrowid is not None else 0 
-
     file_path = '{:03d}_'.format(index) + date.strftime("%Y-%m-%d-%H-%M") + '_{}.mid'.format(data.sequence_type.name) # save midis as ###(id)_####-##-##-##-##(date)_(type).mid
+
+    analysis_json =  json.dumps(dict_values_to_string(data.analysis))
+    evaluation_json =  json.dumps(dict_values_to_string(data.evaluation))
 
     sql_insert_midi = """INSERT INTO midi_analysis(midi_file, date_created, type, analysis, evaluation)
               VALUES(?, ?, ?, ?, ?)"""
 
     sql_update_filepath = """UPDATE midi_analysis SET midi_file = ? WHERE id = ?"""
 
-    cursor.execute(sql_insert_midi, (file_path, date, data.sequence_type.name, json.dumps(data.analysis), json.dumps(data.evaluation)))
+    cursor.execute(sql_insert_midi, (file_path, date, data.sequence_type.name, analysis_json, evaluation_json))
 
     # check id
     last_id = cursor.lastrowid 
@@ -192,3 +197,13 @@ def read_midi(index: int):
     c.row_factory = sqlite3.Row
     c.execute(sql_fetch_mid, (index,))
     return c.fetchone()
+
+
+def dict_values_to_string(dict: dict):
+    for key, value in dict.items():
+        if isinstance(value, dict):
+            value = dict_values_to_string(value)
+        else:
+            if value is not str:
+                value = str(value)
+    return dict
