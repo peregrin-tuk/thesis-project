@@ -1,12 +1,11 @@
 import sqlite3
+import json
 from sqlite3 import Error
-from enum import Enum
 from datetime import datetime
 from pathlib import Path
-from IPython.core.display import JSON
-from pretty_midi import PrettyMIDI
+from src.datatypes.melody_data import MelodyData
 
-from definitions import ROOT_DIR, SequenceType
+from definitions import ROOT_DIR
 from src.io.output import saveMidiFile
 
 db_path = ROOT_DIR / Path('data/generations.db')
@@ -80,30 +79,14 @@ def create_tables():
 
 
 
-def store_generation_result(
-    input_midi: PrettyMIDI,
-    gen_base_midi: PrettyMIDI,
-    output_midi: PrettyMIDI,
-    gen_dur: float,
-    gen_model: str,
-    gen_temperature: float,
-    adapt_dur: float,
-    adapt_steps: dict = None,
-    in_recorded: bool = True
-):
+def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, result_data: MelodyData):
     """ 
     Stores a single generation result in the database and the 3 corresponding midi files in the file system.
 
     Args:
-        input_midi (PrettyMIDI): 'call' sequence as midi object
-        gen_base_midi (PrettyMIDI): result of the generation model as midi object (intermediate step)
-        output_midi (PrettyMIDI): 'response' sequence as midi object
-        gen_dur (float): duration of the generation
-        gen_model (str): checkpoint of the used generation model
-        gen_temperature (float): temperature used for the generation model
-        adapt_dur (float): duration of the adaption
-        adapt_steps (dict, optional): default = None
-        in_recorded (bool, optional): default = True
+        input_data (MelodyData): 'call' sequence melody data object
+        gen_base_data (MelodyData): result of the generation model as melody data object (intermediate step)
+        result_data (MelodyData): 'response' sequence as melody data object
 
     Returns:
         int: id of the inserted row
@@ -115,27 +98,31 @@ def store_generation_result(
     sql_insert_generation = """INSERT INTO generation_results(input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps)
               VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
-    input_type = SequenceType.REC_INPUT if in_recorded else SequenceType.EXAMPLE
-    input_id = store_midi(input_midi, input_type)
-    gen_base_id = store_midi(gen_base_midi, SequenceType.GEN_BASE)
-    output_id = store_midi(output_midi, SequenceType.OUTPUT)
+    input_id = store_midi(input_data)
+    gen_base_id = store_midi(gen_base_data)
+    output_id = store_midi(result_data)
 
-    cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps))
+    # CHECK this is not very safe to do -> noone guarantees that those values are included in the dict
+    # => maybe extend MelodyData with another datatype that holds fields for the absolutely necessary values ? (that might be None at certain time)
+    gen_dur = gen_base_data.meta['generation']['gen_dur']
+    gen_model = gen_base_data.meta['generation']['model'] + ' ' + gen_base_data.meta['generation']['checkpoint']
+    gen_temperature = gen_base_data.meta['generation']['temperature']
+    adapt_steps = result_data.meta['adaptation']['steps']
+    adapt_dur = result_data.meta['adaptation']['total_duration']
+
+    cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, json.dumps(adapt_steps)))
     
     conn.commit()
     return cursor.lastrowid
 
 
 
-def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = None, evaluation: JSON = None):
+def store_midi(data: MelodyData):
     """ 
     Adds a database entry for a midi file and stores the corresponding file in the file system.
 
     Args:
-        midi (PrettyMIDI):  sequence as midi object
-        type (connection.SequenceType): role of the midi sequence, enum of REC_INPUT, EXAMPLE, GEN_BASE or OUTPUT
-        analysis (dict, optional): music analysis data, default = None
-        evaluation (dict, optional): input similarity evaluation data, default = None
+        data (MelodyData): MelodyData object containing the midi sequence, its type, analysis and evaluation results
 
     Returns:
         int: id of the inserted row
@@ -144,14 +131,15 @@ def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = N
     cursor = conn.cursor()
     date = datetime.now()
     index = cursor.lastrowid + 1 if cursor.lastrowid is not None else 0 
-    file_path = '{:03d}_'.format(index) + date.strftime("%Y-%m-%d-%H-%M") + '_{}.mid'.format(sequence_type.name) # save midis as ###(id)_####-##-##-##-##(date)_(type).mid
+
+    file_path = '{:03d}_'.format(index) + date.strftime("%Y-%m-%d-%H-%M") + '_{}.mid'.format(data.sequence_type.name) # save midis as ###(id)_####-##-##-##-##(date)_(type).mid
 
     sql_insert_midi = """INSERT INTO midi_analysis(midi_file, date_created, type, analysis, evaluation)
               VALUES(?, ?, ?, ?, ?)"""
 
     sql_update_filepath = """UPDATE midi_analysis SET midi_file = ? WHERE id = ?"""
 
-    cursor.execute(sql_insert_midi, (file_path, date, sequence_type.name, analysis, evaluation))
+    cursor.execute(sql_insert_midi, (file_path, date, data.sequence_type.name, json.dumps(data.analysis), json.dumps(data.evaluation)))
 
     # check id
     last_id = cursor.lastrowid 
@@ -159,7 +147,7 @@ def store_midi(midi: PrettyMIDI, sequence_type: SequenceType, analysis: JSON = N
         file_path = f'{last_id:03}{file_path[3:]}'
         cursor.execute(sql_update_filepath, (file_path, last_id))
 
-    saveMidiFile(midi, f'../data/midi_files/{file_path}', False)
+    saveMidiFile(data.sequence, str(midi_dir_path / file_path), False)
 
     conn.commit()
     return last_id

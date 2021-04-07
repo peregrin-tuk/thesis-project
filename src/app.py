@@ -116,8 +116,8 @@ class App:
                 gen_model = result.meta['generation']['model'] + ' ' + result.meta['generation']['checkpoint'],
                 gen_temperature = result.meta['generation']['temperature'],
                 adapt_steps = result.meta['adaptation']['steps'],
-                adapt_dur = result.meta['adaptation']['total_duration'])
-
+                adapt_dur = result.meta['adaptation']['total_duration'],
+                in_recorded = False) 
         self.__log("Done.")
 
         # evaluate
