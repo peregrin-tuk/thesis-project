@@ -1,5 +1,5 @@
 import ipywidgets as widgets
-from ipywidgets import HBox, VBox, Label, Layout, AppLayout
+from ipywidgets import Layout
 
 
 ### STYLES ###
@@ -95,3 +95,12 @@ startButton = widgets.Button(
     icon='play',
     layout=button_layout
 )
+
+
+### HEADINGS ###
+
+def h2_heading(text: str):
+    return widgets.HTML(
+        value="<h2>" + text + "<h2>",
+        placeholder=text,
+    )

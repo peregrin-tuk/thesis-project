@@ -10,6 +10,7 @@ from music21.tempo import MetronomeMark
 from music21.pitch import Pitch
 from music21.key import Key
 from music21.note import Note
+import pypianoroll
 
 
 ### UTILS
@@ -63,6 +64,15 @@ def pretty_midi_to_note_seq(melody: PrettyMIDI):
 
 def note_seq_to_pretty_midi(melody: NoteSequence):
     return note_sequence_to_pretty_midi(melody)
+
+
+### PrettyMIDI --> pypianoroll.Track
+def pretty_midi_to_pianoroll_track(midi: PrettyMIDI):
+    if midi.instruments[0].name is not None:
+        name = midi.instruments[0].name
+    else:
+        name = 'Track'
+    return pypianoroll.Track(name=name, is_drum=midi.instruments[0].is_drum, pianoroll=midi.get_piano_roll().T)
 
 
 ### PrettyMIDI --> Music21

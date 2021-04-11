@@ -3,9 +3,9 @@ import json
 from sqlite3 import Error
 from datetime import datetime
 from pathlib import Path
-from src.datatypes.melody_data import MelodyData
 
 from definitions import ROOT_DIR
+from src.datatypes.melody_data import MelodyData
 from src.io.output import saveMidiFile
 
 db_path = ROOT_DIR / Path('data/generations.db')
@@ -110,7 +110,11 @@ def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, r
     adapt_steps = result_data.meta['adaptation']['steps']
     adapt_dur = result_data.meta['adaptation']['total_duration']
 
-    adapt_steps_json =  json.dumps(dict_values_to_string(adapt_steps))
+    adapt_steps_json = []
+
+    for step in adapt_steps:
+        adapt_steps_json.append(dict_values_to_string(step))
+    adapt_steps_json = json.dumps(adapt_steps_json)
 
 
     cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps_json))
@@ -199,11 +203,11 @@ def read_midi(index: int):
     return c.fetchone()
 
 
-def dict_values_to_string(dict: dict):
-    for key, value in dict.items():
+def dict_values_to_string(dictionary: dict):
+    for key, value in dictionary.items():
         if isinstance(value, dict):
             value = dict_values_to_string(value)
         else:
             if value is not str:
-                value = str(value)
-    return dict
+                dictionary[key] = str(value)
+    return dictionary

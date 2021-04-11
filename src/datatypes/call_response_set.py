@@ -47,8 +47,3 @@ class CallResponseSet():
         self.adaptation_operations = adaptation_operations
         self.generation_similarity = generation_similarity
         self.output_similarity = output_similarity
-        
-
-
-# next:
-# TODO => analysis wrapper for all used analysis operations (expectancy algo, music21 calls, evtl. own beat weight calculation based on velocity and note duration)

@@ -29,6 +29,7 @@
 # maybe also add scheduled playAudio and sendMidi functions
 
 from typing import List
+from ipywidgets.widgets.widget_output import Output
 
 import music21
 from IPython.display import display, Audio, FileLink
@@ -77,12 +78,17 @@ def pianoRollToHTML(midi: PrettyMIDI, html_file_path: str):
     plotter.show(midi, html_file_path)
 
 
-def synthesizeMidi(midi: PrettyMIDI):
+def play_button(midi: PrettyMIDI, out: Output = None):
     """
     docstring
     """
     if midi is not None:
-        display(Audio(midi.fluidsynth(fs=16000), rate=16000))
+        if out is None:
+            display(Audio(midi.fluidsynth(fs=16000), rate=16000))
+        else:
+            with out:
+                display(Audio(midi.fluidsynth(fs=16000), rate=16000))
+        
     else:
         print('[IO] Output error: The midi object is empty.')
 

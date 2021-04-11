@@ -1,4 +1,5 @@
 import inspect
+import copy
 from src.analysis import analyze
 
 from src.datatypes.melody_data import MelodyData
@@ -48,10 +49,10 @@ class Adaptation():
         adapt_control.analysis.update(control_analysis)
 
         adapted_sequence = self.pipeline.execute(adapt_base, adapt_control)
-        print('META', adapted_sequence.meta)
-        base.update_sequence_from_adaptation_data(adapted_sequence)
+        result = copy.deepcopy(base)
+        result.update_sequence_from_adaptation_data(adapted_sequence)
         control.update_sequence_from_adaptation_data(adapt_control)
-        return base, control
+        return result, control
 
 
     def __load_operations_from_module(self):

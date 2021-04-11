@@ -4,7 +4,6 @@ from definitions import SequenceType
 from src.io.input import loadMidiFile
 from src.datatypes.melody_data import MelodyData
 from src.datatypes.call_response_set import CallResponseSet
-from src.generation.abstract_generator import AbstractGenerator
 from src.adaptation import Adaptation
 from src.generation import get_available_generators
 from src.db import generations as db
@@ -101,7 +100,7 @@ class App:
 
         # run adaptation
         self.__log("Adapting generated melody to input...")
-        result, gen_data = self.adaptation.adapt(gen_data, input_data)
+        result, input_data = self.adaptation.adapt(gen_data, input_data)
 
         # evaluate
         generation_similarity = self.evaluation.evaluate_similarity(gen_data.sequence, input_data.sequence)
