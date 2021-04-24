@@ -1,8 +1,10 @@
 from pretty_midi import PrettyMIDI
 from ipywidgets import Output
 from pypianoroll import Multitrack
-from visual_midi.visual_midi import Plotter
+import pandas as pd
 import plotly.express as px
+from plotly.offline import iplot, init_notebook_mode
+import plotly.graph_objects as go
 from src.io.conversion import pretty_midi_to_music21, pretty_midi_to_pianoroll_track
 
 
@@ -45,8 +47,6 @@ def multitrack_pianoroll(midis: list, names: list = None, out: Output = None, ar
         args: dict of optional args passed to the plotter
     """
     tracks = []
-    print('midis', midis)
-    print('names', names)
     for name, midi in zip(names, midis):
         track = pretty_midi_to_pianoroll_track(midi)
         if name is not None:
@@ -65,11 +65,58 @@ def multitrack_pianoroll(midis: list, names: list = None, out: Output = None, ar
 
 
 def evaluation_radar(evaluation_values, out: Output = None):
-    # delete # df = ref_db.ref_set_stats_to_dataframe(1).T
-    # fig = px.line_polar(df, r='0.5', theta=df.index, line_close=True)
+    df = pd.DataFrame(evaluation_values, index=['distance']).T
+    fig = px.line_polar(df, r='distance', theta=df.index, line_close=True)
 
     if out is None:
-        pass
+        fig.show()
     else:
         with out:
-            pass
+            iplot([fig]) # TODO doesn't work that way
+
+
+def evaluation_bars(evaluation_values, out: Output = None, color: str = 'lightseagreen'):
+    df = pd.DataFrame(evaluation_values, index=['distance']).T
+    df['distance'] = pd.to_numeric(df['distance'], downcast='float')
+    fig = go.Bar(x=df.index, y=df['distance'], marker_color=color)
+
+    if out is None:
+        fig = go.Figure([fig])
+        fig.show()
+    else:
+        with out:
+            init_notebook_mode()
+            iplot([fig])
+
+def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list = None, color: list = None):
+    
+    data = []
+    
+    i = 0
+    for values in evaluation_data:
+        df = pd.DataFrame(values, index=['distance']).T
+        df['distance'] = pd.to_numeric(df['distance'], downcast='float')
+
+        if names is None:
+            name = 'Similarity of Sequence' + str(i+1)
+        else:
+            name = names[i]
+
+        if color is None:
+            bar = go.Bar(x=df.index, y=df['distance'], name=name)
+        else:
+            bar = go.Bar(x=df.index, y=df['distance'], name=name, marker_color=color[i % len(color)])
+        data.append(bar)
+        i += 1
+
+    fig = go.Figure(data=data)
+    fig.update_layout(barmode='group')
+
+    if out is None:
+        fig = go.Figure(fig)
+        fig.show()
+    else:
+        with out:
+            init_notebook_mode()
+            iplot(fig)
+

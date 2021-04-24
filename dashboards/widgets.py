@@ -58,7 +58,13 @@ tempSlider = widgets.FloatSlider(
     min=0,
     max=1.5,
     step=0.1,
-    readout_format='.1f')
+    readout_format='.1f'
+)
+
+generationInfo = widgets.HTML(
+    value="<p style='color:red;'>No generator initialized.<p>",
+    placeholder='Generation Info',
+)
 
 
 ### ADAPTATION ###
@@ -78,10 +84,18 @@ stepsSelect = widgets.SelectMultiple(
 
 ### BUTTONS ###
 
-button_layout = Layout(margin='20px 0')
+button_layout = Layout(margin='20px 0', width='auto')
 
-applySettingsButton = widgets.Button(
-    description='  APPLY SETTINGS',
+applyGenerationSettingsButton = widgets.Button(
+    description='  APPLY GENERATION SETTINGS',
+    disabled=False,
+    button_style='info',
+    icon='gear',
+    layout=button_layout
+)
+
+applyAdaptationSettingsButton = widgets.Button(
+    description='  APPLY ADAPTATION SETTINGS',
     disabled=False,
     button_style='info',
     icon='gear',

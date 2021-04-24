@@ -1,7 +1,8 @@
 import inspect
 import copy
-from src.analysis import analyze
 
+from definitions import SequenceType
+from src.analysis import analyze
 from src.datatypes.melody_data import MelodyData
 from src.adaptation.abstract_adaptation_operation import AbstractAdaptationOperation
 from src.adaptation.adaptation_pipeline import AdaptationPipeline
@@ -50,6 +51,7 @@ class Adaptation():
 
         adapted_sequence = self.pipeline.execute(adapt_base, adapt_control)
         result = copy.deepcopy(base)
+        result.sequence_type = SequenceType.OUTPUT
         result.update_sequence_from_adaptation_data(adapted_sequence)
         control.update_sequence_from_adaptation_data(adapt_control)
         return result, control

@@ -55,12 +55,9 @@ class App:
         return self.demo_melodies
 
 
-    def apply_settings(self, generator_id: int, temperature: float, steps: list):
+    def apply_generator_settings(self, generator_id: int, temperature: float):
         self.__clear_log()
-        self.__log("Saving settings ...")
-
-        # set adaptation steps
-        self.adaptation.construct_pipeline(steps)
+        self.__log("Saving generator settings ...")
 
         # set temperature
         self.temperature = temperature
@@ -75,6 +72,18 @@ class App:
             self.checkpoint = checkpoint
 
         self.__log("Done.")
+        return self.generator_list[generator_id][0]
+
+
+    def apply_adaptation_settings(self, steps: list):
+        self.__clear_log()
+        self.__log("Saving adaptation settings ...")
+
+        # set adaptation steps
+        self.adaptation.construct_pipeline(steps)
+
+        self.__log("Done.")
+
 
 
     def set_similarity_reference(self, ref_set_id: int):
@@ -91,7 +100,7 @@ class App:
         # CHECK how can we handle uploaded midi files ?
         # construct melodydata from input
         midi = loadMidiFile(input_file_path)
-        input_data = MelodyData(midi, SequenceType.EXAMPLE)
+        input_data = MelodyData(midi, SequenceType.FILE_INPUT)
 
         # run generation
         self.__log("Generating base melody for adaptation...")
