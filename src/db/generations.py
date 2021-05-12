@@ -35,7 +35,9 @@ def create_tables():
                                     type integer NOT NULL,
                                     date_created timestamp NOT NULL,
                                     analysis text,
-                                    evaluation text
+                                    evaluation text,
+                                    set_id integer,
+                                    FOREIGN KEY (set_id) REFERENCES test_sets (id)
                                 );"""
 
     sql_generations_table = """CREATE TABLE IF NOT EXISTS generation_results (
@@ -57,7 +59,8 @@ def create_tables():
     sql_testsets_table = """CREATE TABLE IF NOT EXISTS test_sets (
                                     id integer PRIMARY KEY,
                                     date_created timestamp NOT NULL,
-                                    result_set text NOT NULL,
+                                    avg_gen_evaluation text NOT NULL,
+                                    avg_output_evaluation text NOT NULL,
                                     notes text
                                 );"""
 
@@ -78,8 +81,7 @@ def create_tables():
         print('[DB] Error: Database connection could not be created.')
 
 
-
-def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, result_data: MelodyData):
+def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, result_data: MelodyData, int: set_id = None):
     """ 
     Stores a single generation result in the database and the 3 corresponding midi files in the file system.
 
@@ -162,6 +164,28 @@ def store_midi(data: MelodyData):
     return last_id
 
 
+def store_set(list: cr_sets, dict: avg_gen_evaluation, dict: avg_output_evaluation, str: notes = None)
+    conn = create_connection()
+    cursor = conn.cursor()
+    date = datetime.now()
+
+    sql_insert_set = """INSERT INTO test_sets(date_created, avg_gen_evaluation, avg_output_evaluation, notes)
+              VALUES(?, ?, ?, ?)"""
+
+    avg_gen_evaluation_json = json.dumps(dict_values_to_string(avg_gen_evaluation))
+    avg_output_evaluation_json = json.dumps(dict_values_to_string(avg_output_evaluation))
+
+    cursor.execute(sql_insert_set, (date, avg_gen_evaluation_json, avg_output_evaluation_json, notes))
+    set_id = cursor.lastrowid
+    conn.commit()
+
+    for cr_set in cr_sets:
+        store_generation_result(cr_set.input_sequence, cr_set.generated_base_sequence, cr_set.output_sequence, set_id)
+
+
+# TODO implement
+def update_notes_in_set(int: set_id, str: notes):
+    pass
 
 def read_generation_result(index: int):
     """ 
@@ -180,8 +204,6 @@ def read_generation_result(index: int):
     c.row_factory = sqlite3.Row
     c.execute(sql_fetch_gen, (index,))
     return c.fetchone()
-
-
 
 
 def read_midi(index: int):

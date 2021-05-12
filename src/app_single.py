@@ -13,7 +13,7 @@ from src.io.conversion import note_seq_to_pretty_midi
 from definitions import ROOT_DIR
 
 
-class App:
+class AppSingle:
 
     demo_melodies = [
         ('Twinkle, Twinkle', str(ROOT_DIR / Path('midi/examples/monophonic/twinkle1_4b.mid')) ),
