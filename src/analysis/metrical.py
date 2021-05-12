@@ -66,5 +66,8 @@ def note_offsets_per_beat(stream: Stream):
         beat = int(n.offset) % beat_count
         relative_offset = float(n.offset % 1)
         offset_list[beat].add(relative_offset)
+
+    for i in range(0, beat_count):
+        offset_list[i] = sorted(offset_list[i])
  
     return offset_list

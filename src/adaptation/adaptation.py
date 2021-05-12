@@ -50,12 +50,10 @@ class Adaptation():
         adapt_control.analysis.update(control_analysis)
 
         adapted_sequence = self.pipeline.execute(adapt_base, adapt_control)
-        print('adapted', adapted_sequence.sequence.flat.notes[0].offset)
         result = copy.deepcopy(base)
         result.sequence_type = SequenceType.OUTPUT
         result.update_sequence_from_adaptation_data(adapted_sequence)
         control.update_sequence_from_adaptation_data(adapt_control)
-        print('inserted', result.sequence.instruments[0].notes[0])
         return result, control
 
 

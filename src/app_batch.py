@@ -94,6 +94,7 @@ class App:
         self.ref_set = ref_set['name'] + ' (' + ref_set['source'] + ')'
 
 
+    # TODO split internally into run - frame + generate (save gen_data in self.) + adapt
     def run(self, input_file_path: str, store_results: bool = True):
         self.__clear_log()
 
@@ -103,9 +104,7 @@ class App:
         input_data = MelodyData(midi, SequenceType.FILE_INPUT)
 
         # run generation
-        self.__log("Generating base melody for adaptation...")
-        gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
-        gen_data = MelodyData(note_seq_to_pretty_midi(gen_base['sequence']), SequenceType.GEN_BASE, { 'generation': gen_base['meta'] })
+        gen_data = self.__run_generation()
 
         # run adaptation
         self.__log("Adapting generated melody to input...")
@@ -137,6 +136,15 @@ class App:
                                generation_similarity,
                                output_similarity)
 
+
+    def __run_generation(self):
+        self.__log("Generating base melody for adaptation...")
+        gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
+        self.gen_data = MelodyData(note_seq_to_pretty_midi(gen_base['sequence']), SequenceType.GEN_BASE, { 'generation': gen_base['meta'] })
+        return self.gen_data
+
+    def __run_adaptation(self):
+        pass
 
     def __log(self, msg: str):
         with self.log:

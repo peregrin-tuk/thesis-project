@@ -33,22 +33,64 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
         else:
             beat_count = 4
 
+        bar_count = round( float(control.sequence.duration.quarterLength) / beat_count )
+        allowed_offsets = []
+
+        beat = 0
+        for beat_set in control.analysis[note_offsets_per_beat.__name__]:
+            for relative_offset in beat_set:
+                for i in range(0, bar_count):
+                    allowed_offsets.append(i*beat_count + beat + relative_offset)
+            beat += 1
+        allowed_offsets.sort()
+
         for p in base.sequence.parts:
             for n in p.notes:
-                beat = int(n.offset) % beat_count
-                relative_offset = float(n.offset % 1)
-                closest_allowed_offset = find_closest(control.analysis[note_offsets_per_beat.__name__][beat], relative_offset)
-                n.offset = int(n.offset) + closest_allowed_offset
+                offset = float(n.offset)
+                closest_allowed_offset = find_closest(allowed_offsets, offset)
+                n.offset = closest_allowed_offset
+
+        # for p in base.sequence.parts:
+        #     for n in p.notes:
+        #         beat = int(n.offset) % beat_count
+        #         relative_offset = float(n.offset % 1)
+        #         closest_allowed_offset = find_closest(control.analysis[note_offsets_per_beat.__name__][beat], relative_offset)
+        #         n.offset = int(n.offset) + closest_allowed_offset
         
-        # Handle Overlaps
+        # Spread simultaneous notes
         for p in base.sequence.parts:
             taken_offsets = []
             for n in p.notes:
-                if n.offset in taken_offsets:
-                    idx = p.index(n)
-                    p.pop(idx)
+                offset = float(n.offset)
+                if offset in taken_offsets:
+                    note_idx = p.index(n)
+                    offset_idx = allowed_offsets.index(offset)
+                    if allowed_offsets[offset_idx-2] not in taken_offsets:
+                        p.notes[note_idx-1].offset = allowed_offsets[offset_idx-2]
+                        taken_offsets.append(n.offset)
+                    elif offset_idx < len(allowed_offsets) - 1 and allowed_offsets[offset_idx+1] not in taken_offsets:
+                        n.offset = allowed_offsets[offset_idx+1]
+                        taken_offsets.append(n.offset)
+                    else:
+                        p.pop(note_idx)
                 else:
                     taken_offsets.append(n.offset)
+
+        # shorten note length of overlapping notes
+        for p in base.sequence.parts:
+            print('part length', len(p.notes.notes))
+            # for n in p.notes:
+            for i in range(0, len(p.notes.elements)):
+                n = p.notes.elements[i]
+                note_idx = i
+                print('----------')
+                print('note index', note_idx)
+                print('offset', n.offset)
+                print('length', n.quarterLength)
+                if note_idx < (len(p.notes.notes) - 1): print('next offset', p.notes.elements[note_idx].offset)
+                if note_idx < (len(p.notes.notes) - 1) and n.offset + n.quarterLength > p.notes.elements[note_idx+1].offset:
+                    n.quarterLength = p.notes[note_idx+1].offset - n.offset
+                    print('new length for note ' + str(note_idx) + ': ' + str(n.quarterLength))
         
  
         t2 = time.time()
