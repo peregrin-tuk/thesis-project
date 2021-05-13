@@ -81,7 +81,7 @@ def create_tables():
         print('[DB] Error: Database connection could not be created.')
 
 
-def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, result_data: MelodyData, int: set_id = None):
+def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, result_data: MelodyData, set_id: int = None):
     """ 
     Stores a single generation result in the database and the 3 corresponding midi files in the file system.
 
@@ -97,8 +97,8 @@ def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, r
     cursor = conn.cursor()
     date = datetime.now()
 
-    sql_insert_generation = """INSERT INTO generation_results(input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps)
-              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    sql_insert_generation = """INSERT INTO generation_results(input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps, set_id)
+              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     input_id = store_midi(input_data)
     gen_base_id = store_midi(gen_base_data)
@@ -119,7 +119,7 @@ def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, r
     adapt_steps_json = json.dumps(adapt_steps_json)
 
 
-    cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps_json))
+    cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps_json, set_id))
     
     conn.commit()
     return cursor.lastrowid
@@ -165,7 +165,7 @@ def store_midi(data: MelodyData):
 
 
 # CHECK not yet tested
-def store_set(list: cr_sets, dict: avg_gen_evaluation, dict: avg_output_evaluation, str: notes = None)
+def store_set(cr_sets: list,avg_gen_evaluation: dict, avg_output_evaluation: dict, notes: str = None):
     conn = create_connection()
     cursor = conn.cursor()
     date = datetime.now()
@@ -185,7 +185,7 @@ def store_set(list: cr_sets, dict: avg_gen_evaluation, dict: avg_output_evaluati
 
 
 # CHECK not yet tested
-def update_notes_in_set(int: set_id, str: notes):
+def update_notes_in_set(set_id: int, notes: str):
     """ 
     Updates the notes for a test set.
 
@@ -195,7 +195,6 @@ def update_notes_in_set(int: set_id, str: notes):
     """
     conn = create_connection()
     cursor = conn.cursor()
-    date = datetime.now()
 
     sql_update_test_set = """UPDATE test_sets
                             SET notes = ?,
@@ -203,7 +202,7 @@ def update_notes_in_set(int: set_id, str: notes):
 
     cursor.execute(sql_update_test_set, (
         notes,
-        index)
+        set_id)
     )
 
     conn.commit()

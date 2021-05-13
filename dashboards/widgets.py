@@ -62,12 +62,13 @@ tempSlider = widgets.FloatSlider(
 )
 
 generationAmount = widgets.BoundedIntText(
-    value=5,
+    value=1,
     min=0,
     max=50,
     step=1,
-    description='Amount of generations:',
-    disabled=False
+    # description='Amount of generations:',
+    disabled=False,
+    width=100
 )
 
 generationInfo = widgets.HTML(
@@ -91,11 +92,11 @@ stepsSelect = widgets.SelectMultiple(
 )
 
 adaptationAmount = widgets.BoundedIntText(
-    value=5,
+    value=10,
     min=0,
     max=50,
     step=1,
-    description='Amount of different adaptations per generation:',
+    # description='Amount of different adaptations per generation:',
     disabled=False
 )
 

@@ -40,6 +40,14 @@ class AppBatch:
 
 
     def get_generators(self):
+        """ 
+        Fetches all generators available in the system.
+        Stores a list of available generators in self.generator_list and returns the list.
+
+        Returns:
+            list: list of generators as tuple in the form of (label, generator class, checkpoint enum)
+
+        """
         generators = get_available_generators()
         generator_list = []
         for generator in generators:
@@ -94,26 +102,59 @@ class AppBatch:
         self.ref_set = ref_set['name'] + ' (' + ref_set['source'] + ')'
 
 
-    # TODO split internally into run - frame + generate (save gen_data in self.) + adapt
-    def run(self, input_file_path: str, store_results: bool = True):
-        self.__clear_log()
+    def run(self, input_file_path: str, generation_amount: int, adaptation_amount: int, store_results: bool = True):
+        self.__clear_log() 
 
-        # CHECK how can we handle uploaded midi files ?
         # construct melodydata from input
         midi = loadMidiFile(input_file_path)
         input_data = MelodyData(midi, SequenceType.FILE_INPUT)
 
-        # run generation
-        gen_data = self.__run_generation()
+        # generations
+        generations = []
 
+        for i in range(0, generation_amount):
+            # generate
+            gen_data = self.__run_single_generation()
+
+            # evaluate generation similarity (distance to input)
+            generation_similarity = self.evaluation.evaluate_similarity(gen_data.sequence, input_data.sequence)
+            gen_data.evaluation = generation_similarity
+
+            # adaptations
+            adaptations = []
+
+            for j in range(0, adaptation_amount):
+                cr_set = self.__run_single_adaptation(input_data, gen_data, store_results)
+                adaptations.append(cr_set)
+
+            # TODO evaluate adaptation variance (intra set distance)
+            adaptation_variance = 0
+
+            # TEST calculate average similarity values for adaptations set
+            adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([cr_set.output_similarity for cr_set in adaptations])
+
+            generations.append({'gen_data': gen_data,
+                                'adaptations': adaptations,
+                                'set_variance': adaptation_variance,
+                                'avg_similarity': adaptation_avg_similarity})
+
+        # TODO evaluate adaptation variance (intra set distance)
+        generation_variance = 0
+
+        # TEST calculate average similarity values for generations set
+        generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([gen_data.evaluation for cr_set in generations])
+
+        # return list cr sets + avg sim + variance
+
+    # CHECK and test
+    def __run_single_adaptation(self, input_data: MelodyData, gen_data: MelodyData, store_results: bool = True):
+               
         # run adaptation
         self.__log("Adapting generated melody to input...")
         result, input_data = self.adaptation.adapt(gen_data, input_data)
 
-        # evaluate
-        generation_similarity = self.evaluation.evaluate_similarity(gen_data.sequence, input_data.sequence)
+        # evaluate adaptation similarity (distance to input)
         output_similarity = self.evaluation.evaluate_similarity(result.sequence, input_data.sequence)
-        gen_data.evaluation = generation_similarity
         result.evaluation = output_similarity
 
         # store data in db
@@ -133,18 +174,16 @@ class AppBatch:
                                result,
                                input_data.analysis,
                                self.adaptation.pipeline.get_operations,
-                               generation_similarity,
-                               output_similarity)
+                               gen_data.evaluation,
+                               result.evaluation)
 
 
-    def __run_generation(self):
+    def __run_single_generation(self):
         self.__log("Generating base melody for adaptation...")
         gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
         self.gen_data = MelodyData(note_seq_to_pretty_midi(gen_base['sequence']), SequenceType.GEN_BASE, { 'generation': gen_base['meta'] })
         return self.gen_data
 
-    def __run_adaptation(self):
-        pass
 
     def __log(self, msg: str):
         with self.log:

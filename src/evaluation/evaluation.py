@@ -24,11 +24,35 @@ class Evaluation():
                 if key in similarity_distances:
                     result[key] = similarity_distances[key]
             return { 'absolute': selection, 'normalized': self.__normalize(selection)}
-            
+
+    # TODO implement evaluate_variance(list of prettymidi)        
 
 
     def set_normalization_factors(self, normalization_factors: dict):
         self.normalization_factors = normalization_factors
+
+
+    # CHECK -> evtl. mit variance auch kompatibel machen, indem result_keys dynamisch ausm ersten element in der Liste ermittelt werden
+    # TODO evtl. noch Error Handling für unerlaubten Input (list elemente nicht alle gleich oder keine dictionaries)
+    def calc_avg_from_similarity_dicts(self, lst: list):
+        """ 
+        Takes a list of dictionaries as returned by evaluate_similarity(), calculates the average for each feature (both absolute and normalized) and returns a new dcit with the average values.
+
+        Returns:
+            dict: in the form of {'absolute': avg. absolute eval values, 'normalized': avg. noramlized eval values}
+
+        """
+        result = {'absolute': {}, 'normalized': {}}
+
+        for result_key in result:
+            for feature_key in lst[0][result_key]:
+                total = 0
+                for dictionary in lst:
+                    total += dictionary[result_key][feature_key]
+                avg = total / float(len(lst))
+                result[result_key][feature_key] = avg
+        
+        return result
 
 
     def __normalize(self, evaluation_results: dict):
