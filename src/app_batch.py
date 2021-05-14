@@ -112,7 +112,7 @@ class AppBatch:
         # generations
         generations = []
 
-        for i in range(0, generation_amount):
+        for _ in range(0, generation_amount):
             # generate
             gen_data = self.__run_single_generation()
 
@@ -123,12 +123,12 @@ class AppBatch:
             # adaptations
             adaptations = []
 
-            for j in range(0, adaptation_amount):
+            for _ in range(0, adaptation_amount):
                 cr_set = self.__run_single_adaptation(input_data, gen_data, store_results)
                 adaptations.append(cr_set)
 
             # TODO evaluate adaptation variance (intra set distance)
-            adaptation_variance = 0
+            adaptation_variance = self.evaluation.evaluate_variance()
 
             # TEST calculate average similarity values for adaptations set
             adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([cr_set.output_similarity for cr_set in adaptations])

@@ -1,6 +1,6 @@
-
+from typing import List
 from pretty_midi.pretty_midi import PrettyMIDI
-from src.evaluation.mgeval import analyze_pretty_midi, calc_distances
+from src.evaluation.mgeval import analyze_pretty_midi, calc_distances, calc_intra_set_distances
 
 
 class Evaluation():
@@ -10,22 +10,27 @@ class Evaluation():
 
 
     def evaluate_similarity(self, result: PrettyMIDI, control: PrettyMIDI, features: list = None):
+        result_evaluation = analyze_pretty_midi(result)
+        control_evaluation = analyze_pretty_midi(control)
+        similarity_distances = calc_distances(result_evaluation, control_evaluation)
+
         if features is None:
-            result_evaluation = analyze_pretty_midi(result)
-            control_evaluation = analyze_pretty_midi(control)
-            similarity_distances = calc_distances(result_evaluation, control_evaluation)
             return { 'absolute': similarity_distances, 'normalized': self.__normalize(similarity_distances)}
         else:
             selection = {}
-            result_evaluation = analyze_pretty_midi(result)
-            control_evaluation = analyze_pretty_midi(control)
-            similarity_distances = calc_distances(result_evaluation, control_evaluation)
             for key in features:
                 if key in similarity_distances:
-                    result[key] = similarity_distances[key]
+                    selection[key] = similarity_distances[key]
             return { 'absolute': selection, 'normalized': self.__normalize(selection)}
 
-    # TODO implement evaluate_variance(list of prettymidi)        
+
+    def evaluate_variance(self, sequences: List[PrettyMIDI]):
+        evals = []
+
+        for s in sequences:
+            evals.append(analyze_pretty_midi(s))
+
+        return calc_intra_set_distances(evals)
 
 
     def set_normalization_factors(self, normalization_factors: dict):
@@ -34,7 +39,7 @@ class Evaluation():
 
     # CHECK -> evtl. mit variance auch kompatibel machen, indem result_keys dynamisch ausm ersten element in der Liste ermittelt werden
     # TODO evtl. noch Error Handling für unerlaubten Input (list elemente nicht alle gleich oder keine dictionaries)
-    def calc_avg_from_similarity_dicts(self, lst: list):
+    def calc_avg_from_similarity_dicts(self, lst: List[dict]):
         """ 
         Takes a list of dictionaries as returned by evaluate_similarity(), calculates the average for each feature (both absolute and normalized) and returns a new dcit with the average values.
 
