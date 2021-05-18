@@ -127,24 +127,39 @@ class AppBatch:
                 cr_set = self.__run_single_adaptation(input_data, gen_data, store_results)
                 adaptations.append(cr_set)
 
-            # TODO evaluate adaptation variance (intra set distance)
-            adaptation_variance = self.evaluation.evaluate_variance()
+            # evaluate adaptation variance (intra set distance)
+            adaptation_variance = self.evaluation.evaluate_variance([cr_set.output_sequence.sequence for cr_set in adaptations])
 
             # TEST calculate average similarity values for adaptations set
             adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([cr_set.output_similarity for cr_set in adaptations])
 
             generations.append({'gen_data': gen_data,
                                 'adaptations': adaptations,
-                                'set_variance': adaptation_variance,
-                                'avg_similarity': adaptation_avg_similarity})
+                                'adaptation_set_variance': adaptation_variance,
+                                'adaptation_set_avg_similarity': adaptation_avg_similarity})
 
-        # TODO evaluate adaptation variance (intra set distance)
-        generation_variance = 0
+        # evaluate generation variance (intra set distance)
+        generation_variance = self.evaluation.evaluate_variance([g.gen_data.sequence for g in generations])
 
-        # TEST calculate average similarity values for generations set
-        generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([gen_data.evaluation for cr_set in generations])
+
+        # TEST calculate average similarity values for generations set and all adaptation sets
+        generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g.gen_data.evaluation for g in generations])
+        adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g.avg_similarity for g in generations])
+        
+
+        # store set to database
+        self.__log("Saving results to database...")
+        if store_results:
+            self.evaluation.store_set(sum([g.adaptations for g in generations], []), generation_avg_similarity, adaptation_avg_similarity)
+        self.__log("Done.")
 
         # return list cr sets + avg sim + variance
+        return {
+            'generations': generations,
+            'generation_set_variance': generation_variance,
+            'generation_set_avg_similarity': generation_avg_similarity,
+            'adaptation_avg_similarity': adaptation_avg_similarity
+        }
 
     # CHECK and test
     def __run_single_adaptation(self, input_data: MelodyData, gen_data: MelodyData, store_results: bool = True):
@@ -156,15 +171,6 @@ class AppBatch:
         # evaluate adaptation similarity (distance to input)
         output_similarity = self.evaluation.evaluate_similarity(result.sequence, input_data.sequence)
         result.evaluation = output_similarity
-
-        # store data in db
-        self.__log("Saving results to database...")
-        if store_results:
-            db.store_generation_result(
-                input_data,
-                gen_data,
-                result) 
-        self.__log("Done.")
 
         # return data for interface as call-response-set
         return CallResponseSet(self.generator,

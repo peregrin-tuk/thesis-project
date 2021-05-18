@@ -98,7 +98,7 @@ def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, r
     date = datetime.now()
 
     sql_insert_generation = """INSERT INTO generation_results(input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps, set_id)
-              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     input_id = store_midi(input_data)
     gen_base_id = store_midi(gen_base_data)

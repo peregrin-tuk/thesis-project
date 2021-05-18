@@ -90,7 +90,8 @@ def calc_intra_set_distances(set_of_sequences: List[dict]):
     i = 0
     for key in set_of_sequences[0]:
         for train_index, test_index in loo.split(np.arange(len(set_of_sequences))):
-            intra_set_distances[test_index[0]][i] = utils.c_dist(set_of_sequences[test_index][key], set_of_sequences[train_index][key])
+            x = utils.c_dist(set_of_sequences[test_index][key], set_of_sequences[train_index][key])
+            intra_set_distances[test_index[0]][i] = x
         i += i
 
     return intra_set_distances
