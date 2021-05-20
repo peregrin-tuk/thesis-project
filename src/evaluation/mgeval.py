@@ -84,6 +84,27 @@ def calc_distances(metrics1: dict, metrics2: dict):
 
 
 def calc_intra_set_distances(set_of_sequences: List[dict]):
+    set_of_sequences = __list_of_dicts_to_dict_of_lists(set_of_sequences)
+    max_key = max(set_of_sequences, key= lambda x: len(set(set_of_sequences[x])))
+
+    num_samples = len(set_of_sequences[max_key])
+    num_metrics = len(set_of_sequences)
+
+    loo = LeaveOneOut()
+    loo.get_n_splits(np.arange(num_samples))
+    intra_set_distances = np.zeros((num_samples, num_metrics, num_samples-1))
+
+    i = 0
+    for key in set_of_sequences:
+        for train_indexes, test_index in loo.split(np.arange(num_samples)):
+            x = utils.c_dist(np.array(set_of_sequences[key])[test_index], np.array(set_of_sequences[key])[train_indexes])
+            intra_set_distances[test_index[0]][i] = x
+        i += 1
+        
+    return intra_set_distances
+
+
+
     loo = LeaveOneOut()
     loo.get_n_splits(np.arange(len(set_of_sequences)))
     intra_set_distances = np.zeros((len(set_of_sequences), len(set_of_sequences[0]), len(set_of_sequences)-1))
@@ -99,48 +120,14 @@ def calc_intra_set_distances(set_of_sequences: List[dict]):
 
 
 ###############################
-###     SINGLE FEATURES     ###
+###        UTILITIES        ###
 ###############################
 
-'''
-def __get_pitch_count(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_pitch_count_per_bar(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_pitch_class_histogram(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_pitch_class_histogram_per_bar(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_pitch_class_transition_matrix(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_avg_pitch_interval(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_pitch_range(midi_sequence: PrettyMIDI):
-    # can also be seen from histogram
-    pass
-
-
-
-def __get_note_count(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_note_count_per_bar(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_note_length_histogram(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_note_length_transition_matrix(midi_sequence: PrettyMIDI):
-    pass
-
-def __get_avg_ioi(midi_sequence: PrettyMIDI):
-    pass
-'''
-
-# def get_ioi_range() ?
+def __list_of_dicts_to_dict_of_lists(sequences: List[dict]):
+    result = {}
+    for dictionary in sequences:
+        for key, value in dictionary.items():
+            if key not in result.keys():
+                result[key] = []
+            result[key].append(value)
+    return result

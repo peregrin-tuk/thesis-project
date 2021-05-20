@@ -24,13 +24,41 @@ class Evaluation():
             return { 'absolute': selection, 'normalized': self.__normalize(selection)}
 
 
+    # CHECK is using similarity normalization / avg distance aussagekräftig oder gibts besseren value?
+    # CHECK currently similarity gets calculated twice (because most likely evaluate_sim was already called before => could be optimised)
     def evaluate_variance(self, sequences: List[PrettyMIDI]):
+        """ 
+        Takes a list of dictionaries as returned by evaluate_similarity(), calculates the average distance between the values of each feature based on exhaustive cross validation.
+        Note: Currently returns the average inter-set distance + the average inter-set distance normalized by the similarity ref set.
+        This might be revised in the future to another statistical value.
+
+        Returns:
+            dict: in the form of {'absolute': avg. absolute eval values, 'normalized': avg. normalized eval values}
+
+        """
         evals = []
 
         for s in sequences:
             evals.append(analyze_pretty_midi(s))
 
-        return calc_intra_set_distances(evals)
+        distances = calc_intra_set_distances(evals)
+        keys = evals[0].keys()
+        result = {}
+
+        for i, key in enumerate(keys):
+            total = 0
+            count = 0
+            for el in distances:
+                for distance in el[i]:
+                    total += distance
+                    count += 1
+
+            result[key] = total / float(count)
+
+        return { 'absolute': result, 'normalized': self.__normalize(result)}
+
+
+
 
 
     def set_normalization_factors(self, normalization_factors: dict):
@@ -38,7 +66,7 @@ class Evaluation():
 
 
     # CHECK -> evtl. mit variance auch kompatibel machen, indem result_keys dynamisch ausm ersten element in der Liste ermittelt werden
-    # TODO evtl. noch Error Handling für unerlaubten Input (list elemente nicht alle gleich oder keine dictionaries)
+    # CHECK  evtl. noch Error Handling für unerlaubten Input (list elemente nicht alle gleich)
     def calc_avg_from_similarity_dicts(self, lst: List[dict]):
         """ 
         Takes a list of dictionaries as returned by evaluate_similarity(), calculates the average for each feature (both absolute and normalized) and returns a new dcit with the average values.
