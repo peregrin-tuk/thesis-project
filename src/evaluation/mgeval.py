@@ -83,11 +83,11 @@ def calc_distances(metrics1: dict, metrics2: dict):
     return distances
 
 
-def calc_intra_set_distances(set_of_sequences: List[dict]):
-    set_of_sequences = __list_of_dicts_to_dict_of_lists(set_of_sequences)
-    max_key = max(set_of_sequences, key= lambda x: len(set(set_of_sequences[x])))
+def calc_intra_set_distances(list_of_sequences: List[dict]):
+    set_of_sequences = __list_of_dicts_to_dict_of_lists(list_of_sequences)
+    #max_key = max(set_of_sequences, key= lambda x: len(set(set_of_sequences[x])))
 
-    num_samples = len(set_of_sequences[max_key])
+    num_samples = len(list_of_sequences)
     num_metrics = len(set_of_sequences)
 
     loo = LeaveOneOut()
@@ -100,7 +100,7 @@ def calc_intra_set_distances(set_of_sequences: List[dict]):
             x = utils.c_dist(np.array(set_of_sequences[key])[test_index], np.array(set_of_sequences[key])[train_indexes])
             intra_set_distances[test_index[0]][i] = x
         i += 1
-        
+
     return intra_set_distances
 
 

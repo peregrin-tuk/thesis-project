@@ -11,6 +11,7 @@ from src.db.reference_sets import fetch_ref_set_by_id, get_normalization_values_
 from src.evaluation.evaluation import Evaluation
 from src.io.conversion import note_seq_to_pretty_midi
 from definitions import ROOT_DIR
+import json
 
 
 class AppBatch:
@@ -112,8 +113,9 @@ class AppBatch:
         # generations
         generations = []
 
-        for _ in range(0, generation_amount):
+        for i in range(0, generation_amount):
             # generate
+            self.__log("Generating base melody " + str(i+1) + "...")
             gen_data = self.__run_single_generation()
 
             # evaluate generation similarity (distance to input)
@@ -123,8 +125,9 @@ class AppBatch:
             # adaptations
             adaptations = []
 
+            self.__log("Creating " + str(adaptation_amount) + " adaptations of generation " + str(i+1) + "...")
             for _ in range(0, adaptation_amount):
-                cr_set = self.__run_single_adaptation(input_data, gen_data, store_results)
+                cr_set = self.__run_single_adaptation(input_data, gen_data)
                 adaptations.append(cr_set)
 
             # evaluate adaptation variance (intra set distance)
@@ -139,18 +142,18 @@ class AppBatch:
                                 'adaptation_set_avg_similarity': adaptation_avg_similarity})
 
         # evaluate generation variance (intra set distance)
-        generation_variance = self.evaluation.evaluate_variance([g.gen_data.sequence for g in generations])
+        generation_variance = self.evaluation.evaluate_variance([g['gen_data'].sequence for g in generations])
 
 
         # TEST calculate average similarity values for generations set and all adaptation sets
-        generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g.gen_data.evaluation for g in generations])
-        adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g.avg_similarity for g in generations])
+        generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g['gen_data'].evaluation for g in generations])
+        adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g['adaptation_set_avg_similarity'] for g in generations])
         
 
         # store set to database
         self.__log("Saving results to database...")
         if store_results:
-            self.evaluation.store_set(sum([g.adaptations for g in generations], []), generation_avg_similarity, adaptation_avg_similarity)
+            db.store_set(sum([g['adaptations'] for g in generations], []), generation_avg_similarity, adaptation_avg_similarity)
         self.__log("Done.")
 
         # return list cr sets + avg sim + variance
@@ -162,10 +165,9 @@ class AppBatch:
         }
 
     # CHECK and test
-    def __run_single_adaptation(self, input_data: MelodyData, gen_data: MelodyData, store_results: bool = True):
+    def __run_single_adaptation(self, input_data: MelodyData, gen_data: MelodyData):
                
         # run adaptation
-        self.__log("Adapting generated melody to input...")
         result, input_data = self.adaptation.adapt(gen_data, input_data)
 
         # evaluate adaptation similarity (distance to input)
@@ -185,7 +187,6 @@ class AppBatch:
 
 
     def __run_single_generation(self):
-        self.__log("Generating base melody for adaptation...")
         gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
         self.gen_data = MelodyData(note_seq_to_pretty_midi(gen_base['sequence']), SequenceType.GEN_BASE, { 'generation': gen_base['meta'] })
         return self.gen_data

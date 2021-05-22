@@ -50,12 +50,6 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
                 closest_allowed_offset = find_closest(allowed_offsets, offset)
                 n.offset = closest_allowed_offset
 
-        # for p in base.sequence.parts:
-        #     for n in p.notes:
-        #         beat = int(n.offset) % beat_count
-        #         relative_offset = float(n.offset % 1)
-        #         closest_allowed_offset = find_closest(control.analysis[note_offsets_per_beat.__name__][beat], relative_offset)
-        #         n.offset = int(n.offset) + closest_allowed_offset
         
         # Spread simultaneous notes
         for p in base.sequence.parts:
@@ -78,19 +72,19 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
 
         # shorten note length of overlapping notes
         for p in base.sequence.parts:
-            print('part length', len(p.notes.notes))
+            # print('part length', len(p.notes.notes))
             # for n in p.notes:
             for i in range(0, len(p.notes.elements)):
                 n = p.notes.elements[i]
                 note_idx = i
-                print('----------')
-                print('note index', note_idx)
-                print('offset', n.offset)
-                print('length', n.quarterLength)
-                if note_idx < (len(p.notes.notes) - 1): print('next offset', p.notes.elements[note_idx].offset)
+                # print('----------')
+                # print('note index', note_idx)
+                # print('offset', n.offset)
+                # print('length', n.quarterLength)
+                # if note_idx < (len(p.notes.notes) - 1): print('next offset', p.notes.elements[note_idx].offset)
                 if note_idx < (len(p.notes.notes) - 1) and n.offset + n.quarterLength > p.notes.elements[note_idx+1].offset:
                     n.quarterLength = p.notes[note_idx+1].offset - n.offset
-                    print('new length for note ' + str(note_idx) + ': ' + str(n.quarterLength))
+                    # print('new length for note ' + str(note_idx) + ': ' + str(n.quarterLength))
         
  
         t2 = time.time()
