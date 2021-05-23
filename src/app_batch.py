@@ -131,6 +131,7 @@ class AppBatch:
                 adaptations.append(cr_set)
 
             # evaluate adaptation variance (intra set distance)
+            # TODO ist immer 0.0
             adaptation_variance = self.evaluation.evaluate_variance([cr_set.output_sequence.sequence for cr_set in adaptations])
 
             # TEST calculate average similarity values for adaptations set
@@ -148,6 +149,7 @@ class AppBatch:
         # TEST calculate average similarity values for generations set and all adaptation sets
         generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g['gen_data'].evaluation for g in generations])
         adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g['adaptation_set_avg_similarity'] for g in generations])
+        adaptation_avg_variance = self.evaluation.calc_avg_from_similarity_dicts([g['adaptation_set_variance'] for g in generations])
         
 
         # store set to database
@@ -161,7 +163,8 @@ class AppBatch:
             'generations': generations,
             'generation_set_variance': generation_variance,
             'generation_set_avg_similarity': generation_avg_similarity,
-            'adaptation_avg_similarity': adaptation_avg_similarity
+            'adaptation_avg_similarity': adaptation_avg_similarity,
+            'adaptation_avg_variance': adaptation_avg_variance,
         }
 
     # CHECK and test
