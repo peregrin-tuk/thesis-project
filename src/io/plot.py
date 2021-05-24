@@ -1,10 +1,13 @@
+from typing import List
 from pretty_midi import PrettyMIDI
 from ipywidgets import Output
 from pypianoroll import Multitrack
 import pandas as pd
 import plotly.express as px
+from plotly.subplots import make_subplots
 from plotly.offline import iplot, init_notebook_mode
 import plotly.graph_objects as go
+
 from src.io.conversion import pretty_midi_to_music21, pretty_midi_to_pianoroll_track
 
 
@@ -90,17 +93,58 @@ def evaluation_bars(evaluation_values, out: Output = None, color: str = 'lightse
 
 def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list = None, color: list = None):
     
+    if names is None:
+        names = []
+        for i in range(0, len(evaluation_data)):
+            names.append('Similarity of Sequence' + str(i+1))
+
+    fig = __create_evaluation_bar_fig(evaluation_data, names, color)
+
+    if out is None:
+        fig = go.Figure(fig)
+        fig.show()
+    else:
+        with out:
+            init_notebook_mode()
+            iplot(fig)
+
+# CHECK could abstract to x plots (list with data, nameslist, title) -> for loop, create row for each
+def two_multibar_plots(left_data: list, left_names: List[str], left_title: str, right_data: list, right_names: List[str], right_title: str, headline: str = None, out: Output = None):
+    fig = make_subplots(rows=1, cols=2, subplot_titles=[left_title, right_title])
+
+    left_fig = __create_evaluation_bar_fig(left_data, left_names)
+    fig.add_trace(
+        left_fig,
+        row=1, col=1
+    )
+
+    right_fig = __create_evaluation_bar_fig(right_data, right_names)
+    fig.add_trace(
+        right_fig,
+        row=1, col=2
+    )
+
+    if headline is not None:
+        fig.update_layout(title_text=headline)
+
+    if out is None:
+        fig = go.Figure(fig)
+        fig.show()
+    else:
+        with out:
+            init_notebook_mode()
+            iplot(fig)
+
+
+def __create_evaluation_bar_fig(data: list, names: list, color: list = None):
     data = []
     
     i = 0
-    for values in evaluation_data:
+    for values in data:
         df = pd.DataFrame(values, index=['distance']).T
         df['distance'] = pd.to_numeric(df['distance'], downcast='float')
 
-        if names is None:
-            name = 'Similarity of Sequence' + str(i+1)
-        else:
-            name = names[i]
+        name = names[i]
 
         if color is None:
             bar = go.Bar(x=df.index, y=df['distance'], name=name)
@@ -112,11 +156,4 @@ def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list
     fig = go.Figure(data=data)
     fig.update_layout(barmode='group')
 
-    if out is None:
-        fig = go.Figure(fig)
-        fig.show()
-    else:
-        with out:
-            init_notebook_mode()
-            iplot(fig)
-
+    return fig

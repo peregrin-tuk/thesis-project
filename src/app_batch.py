@@ -115,7 +115,7 @@ class AppBatch:
 
         for i in range(0, generation_amount):
             # generate
-            self.__log("Generating base melody " + str(i+1) + "...")
+            self.__log("Generating base melody " + str(i+1) + "/" + str(generation_amount) + "...")
             gen_data = self.__run_single_generation()
 
             # evaluate generation similarity (distance to input)
@@ -159,13 +159,15 @@ class AppBatch:
         self.__log("Done.")
 
         # return list cr sets + avg sim + variance
-        return {
+        self.result = {
             'generations': generations,
             'generation_set_variance': generation_variance,
             'generation_set_avg_similarity': generation_avg_similarity,
             'adaptation_avg_similarity': adaptation_avg_similarity,
             'adaptation_avg_variance': adaptation_avg_variance,
         }
+        
+        return self.result
 
     # CHECK and test
     def __run_single_adaptation(self, input_data: MelodyData, gen_data: MelodyData):
