@@ -11,6 +11,9 @@ import plotly.graph_objects as go
 from src.io.conversion import pretty_midi_to_music21, pretty_midi_to_pianoroll_track
 
 
+###############################
+###      OLD PIANOROLLS     ###
+###############################
 
 def pianoRoll_music21(midi: PrettyMIDI, out: Output = None):
     """
@@ -37,6 +40,7 @@ def pianoroll(midi: PrettyMIDI, out: Output = None, args: dict = None):
     else:
         with out:
             track.plot(**args)
+
 
 def multitrack_pianoroll(midis: list, names: list = None, out: Output = None, args: dict = None):
     """
@@ -66,17 +70,9 @@ def multitrack_pianoroll(midis: list, names: list = None, out: Output = None, ar
         with out:
             multitrack.plot(**args)
 
-
-def evaluation_radar(evaluation_values, out: Output = None):
-    df = pd.DataFrame(evaluation_values, index=['distance']).T
-    fig = px.line_polar(df, r='distance', theta=df.index, line_close=True)
-
-    if out is None:
-        fig.show()
-    else:
-        with out:
-            iplot([fig]) # TODO doesn't work that way
-
+###############################
+###     EVALUATION BARS     ###
+###############################
 
 def evaluation_bars(evaluation_values, out: Output = None, color: str = 'lightseagreen'):
     df = pd.DataFrame(evaluation_values, index=['distance']).T
@@ -91,6 +87,7 @@ def evaluation_bars(evaluation_values, out: Output = None, color: str = 'lightse
             init_notebook_mode()
             iplot([fig])
 
+
 def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list = None, color: list = None):
     
     if names is None:
@@ -98,7 +95,10 @@ def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list
         for i in range(0, len(evaluation_data)):
             names.append('Similarity of Sequence' + str(i+1))
 
-    fig = __create_evaluation_bar_fig(evaluation_data, names, color)
+    traces = __create_evaluation_bar_traces(evaluation_data, names, color)
+
+    fig = go.Figure(data=traces)
+    fig.update_layout(barmode='group')
 
     if out is None:
         fig = go.Figure(fig)
@@ -108,21 +108,27 @@ def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list
             init_notebook_mode()
             iplot(fig)
 
+
 # CHECK could abstract to x plots (list with data, nameslist, title) -> for loop, create row for each
 def two_multibar_plots(left_data: list, left_names: List[str], left_title: str, right_data: list, right_names: List[str], right_title: str, headline: str = None, out: Output = None):
     fig = make_subplots(rows=1, cols=2, subplot_titles=[left_title, right_title])
 
-    left_fig = __create_evaluation_bar_fig(left_data, left_names)
-    fig.add_trace(
-        left_fig,
-        row=1, col=1
-    )
+    left_traces = __create_evaluation_bar_traces(left_data, left_names)
+    for trace in left_traces:
+        fig.add_trace(
+            trace,
+            row=1, col=1
+        )
 
-    right_fig = __create_evaluation_bar_fig(right_data, right_names)
-    fig.add_trace(
-        right_fig,
-        row=1, col=2
-    )
+    right_traces = __create_evaluation_bar_traces(right_data, right_names) 
+    for trace in right_traces:
+        fig.add_trace(
+            trace,
+            row=1, col=2
+        )
+
+    # TODO Test
+    fig.update_yaxes(matches='y')
 
     if headline is not None:
         fig.update_layout(title_text=headline)
@@ -136,8 +142,8 @@ def two_multibar_plots(left_data: list, left_names: List[str], left_title: str, 
             iplot(fig)
 
 
-def __create_evaluation_bar_fig(data: list, names: list, color: list = None):
-    data = []
+def __create_evaluation_bar_traces(data: list, names: list, color: list = None):
+    traces = []
     
     i = 0
     for values in data:
@@ -147,13 +153,56 @@ def __create_evaluation_bar_fig(data: list, names: list, color: list = None):
         name = names[i]
 
         if color is None:
-            bar = go.Bar(x=df.index, y=df['distance'], name=name)
+            traces.append(go.Bar(x=df.index, y=df['distance'], name=name))
         else:
-            bar = go.Bar(x=df.index, y=df['distance'], name=name, marker_color=color[i % len(color)])
-        data.append(bar)
+            traces.append(go.Bar(x=df.index, y=df['distance'], name=name, marker_color=color[i % len(color)]))
         i += 1
 
-    fig = go.Figure(data=data)
-    fig.update_layout(barmode='group')
+    return traces
 
-    return fig
+
+###############################
+###     CUSTOM PIANOROLL    ###
+###############################
+
+def plotly_pianoroll(sequence: PrettyMIDI, out: Output = None):
+
+    px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
+
+    # pretty midi to dataframe
+    # CHECK could be abstracted to separate method
+    df = pd.DataFrame(columns=['start', 'end', 'pitch', 'velocity'])
+    for i, note in enumerate(sequence.instruments[0].notes):
+        df.loc[i] = [note.start, note.end, note.pitch, note.velocity]
+
+    fig = px.timeline(df, x_start="start", x_end="end", y="pitch", color="velocity", labels=dict(x="Time in Bars", y="Pitch", color="Velocity"))
+    fig.layout.xaxis.type = 'linear'
+    fig.update_yaxes(dtick=1, showgrid=True)
+
+    if out is None:
+        fig.show()
+    else:
+        with out:
+            init_notebook_mode()
+            iplot(fig)
+
+
+def my_process_dataframe_timeline_patch(args):
+    """
+    Massage input for bar traces for px.timeline()
+    Allows differnt colors to be used on integer timeline plots such as the piano roll above.
+    """
+    args["is_timeline"] = True
+    if args["x_start"] is None or args["x_end"] is None:
+        raise ValueError("Both x_start and x_end are required")
+
+    x_start = args["data_frame"][args["x_start"]]
+    x_end = args["data_frame"][args["x_end"]]
+
+    # note that we are not adding any columns to the data frame here, so no risk of overwrite
+    args["data_frame"][args["x_end"]] = (x_end - x_start)
+    args["x"] = args["x_end"]
+    del args["x_end"]
+    args["base"] = args["x_start"]
+    del args["x_start"]
+    return args

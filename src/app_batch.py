@@ -1,4 +1,5 @@
 from pathlib import Path
+from pprint import pprint
 from ipywidgets import Output
 from definitions import SequenceType
 from src.io.input import loadMidiFile
@@ -11,7 +12,6 @@ from src.db.reference_sets import fetch_ref_set_by_id, get_normalization_values_
 from src.evaluation.evaluation import Evaluation
 from src.io.conversion import note_seq_to_pretty_midi
 from definitions import ROOT_DIR
-import json
 
 
 class AppBatch:
@@ -131,8 +131,11 @@ class AppBatch:
                 adaptations.append(cr_set)
 
             # evaluate adaptation variance (intra set distance)
-            # TODO ist immer 0.0
-            adaptation_variance = self.evaluation.evaluate_variance([cr_set.output_sequence.sequence for cr_set in adaptations])
+            if len(adaptations) > 1:
+                print('variance input', [cr_set.output_sequence.sequence for cr_set in adaptations])
+                adaptation_variance = self.evaluation.evaluate_variance([cr_set.output_sequence.sequence for cr_set in adaptations])
+                print('variance for set' + str(i))
+                pprint(adaptation_variance)
 
             # TEST calculate average similarity values for adaptations set
             adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([cr_set.output_similarity for cr_set in adaptations])
@@ -143,7 +146,8 @@ class AppBatch:
                                 'adaptation_set_avg_similarity': adaptation_avg_similarity})
 
         # evaluate generation variance (intra set distance)
-        generation_variance = self.evaluation.evaluate_variance([g['gen_data'].sequence for g in generations])
+        if len(generations) > 1:
+            generation_variance = self.evaluation.evaluate_variance([g['gen_data'].sequence for g in generations])
 
 
         # TEST calculate average similarity values for generations set and all adaptation sets
@@ -166,7 +170,7 @@ class AppBatch:
             'adaptation_avg_similarity': adaptation_avg_similarity,
             'adaptation_avg_variance': adaptation_avg_variance,
         }
-        
+
         return self.result
 
     # CHECK and test
