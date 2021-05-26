@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import music21
 from src.datatypes.melody_data import AdaptationMelodyData
+from src.io.conversion import music21_to_pretty_midi
 
 class AbstractAdaptationOperation(ABC):
     """Description
@@ -24,7 +25,7 @@ class AbstractAdaptationOperation(ABC):
         base.meta.setdefault('steps',[]).append({
             'name': name,
             'duration': duration,
-            'intermediate_result': adapted_sequence
+            'intermediate_result': music21_to_pretty_midi(adapted_sequence)
         })
         base.analysis.update(base_analysis)
         return base

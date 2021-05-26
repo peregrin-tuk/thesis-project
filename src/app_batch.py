@@ -146,6 +146,7 @@ class AppBatch:
                                 'adaptation_set_avg_similarity': adaptation_avg_similarity})
 
         # evaluate generation variance (intra set distance)
+        generation_variance = None
         if len(generations) > 1:
             generation_variance = self.evaluation.evaluate_variance([g['gen_data'].sequence for g in generations])
 

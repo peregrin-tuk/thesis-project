@@ -1,3 +1,4 @@
+from pprint import pprint
 from typing import List
 from pretty_midi import PrettyMIDI
 from ipywidgets import Output
@@ -165,20 +166,48 @@ def __create_evaluation_bar_traces(data: list, names: list, color: list = None):
 ###     CUSTOM PIANOROLL    ###
 ###############################
 
-def plotly_pianoroll(sequence: PrettyMIDI, title: str = None, out: Output = None):
+def plotly_pianoroll(sequence: PrettyMIDI, title: str = None, out: Output = None, pitch_range: List[int] = None, args: dict = None):
 
     px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
 
     # pretty midi to dataframe
-    # CHECK could be abstracted to separate method
     df = pd.DataFrame(columns=['start', 'end', 'pitch', 'velocity'])
     for i, note in enumerate(sequence.instruments[0].notes):
         df.loc[i] = [note.start, note.end, note.pitch, note.velocity]
 
-    fig = px.timeline(df, x_start="start", x_end="end", y="pitch", color="velocity", title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"})
+    if args is None: args = {}
+    fig = px.timeline(df, x_start="start", x_end="end", y="pitch", color="velocity", range_y=pitch_range, range_color=[0, 127], title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"}, **args)
     fig.layout.xaxis.type = 'linear'
     fig.update_yaxes(dtick=1, showgrid=True)
     fig.update_xaxes(title_text='Time in Bars')
+    fig.update_traces(width=1)
+
+    if out is None:
+        fig.show()
+    else:
+        with out:
+            init_notebook_mode()
+            iplot(fig)
+
+# CHECK no funciona! (colors are wrong, items sometimes get incorrect widths, which is strange)
+def multitrack_plotly_pianoroll(sequences: List[PrettyMIDI], names: List[str], title: str = None, out: Output = None, pitch_range: List[int] = None, args: dict = None):
+    
+    px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
+
+    df = pd.DataFrame(columns=['Sequence', 'Start', 'End', 'Pitch', 'Velocity'])
+    i = 0
+    for s, sequence in enumerate(sequences):
+        for note in sequence.instruments[0].notes:
+            df.loc[i] = [names[s], note.start, note.end, note.pitch, note.velocity]
+            i += 1
+
+    if args is None: args = {}
+    fig = px.timeline(df, facet_row="Sequence", color="Sequence", x_start="Start", x_end="End", y="Pitch", range_y=pitch_range, title=title, height=800, **args)
+    fig.layout.xaxis.type = 'linear'
+    fig.update_yaxes(dtick=1, showgrid=True)
+    fig.update_traces(width=1)
+    fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+    
 
     if out is None:
         fig.show()
@@ -188,11 +217,29 @@ def plotly_pianoroll(sequence: PrettyMIDI, title: str = None, out: Output = None
             iplot(fig)
 
 
-def multitrack_plotly_pianoroll(sequences: List[PrettyMIDI], names: List[str], title: str = None, out: Output = None):
-    pass
 
-def animated_plotly_pianoroll(sequences: List[PrettyMIDI], title: str = None, out: Output = None):
-    pass
+def animated_plotly_pianoroll(sequences: List[PrettyMIDI], step_names: List[str], title: str = None, out: Output = None, pitch_range: List[int] = None, args: dict = None):
+    px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
+
+    df = pd.DataFrame(columns=['step', 'start', 'end', 'pitch', 'velocity'])
+    i = 0
+    for s, sequence in enumerate(sequences):
+        for note in sequence.instruments[0].notes:
+            df.loc[i] = [step_names[s], note.start, note.end, note.pitch, note.velocity]
+            i += 1
+
+    if args is None: args = {}
+    fig = px.timeline(df, animation_frame="step", x_start="start", x_end="end", y="pitch", color="velocity", range_y=pitch_range, range_color=[0, 127], title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"}, **args)
+    fig.layout.xaxis.type = 'linear'
+    fig.update_yaxes(dtick=1, showgrid=True, type="category")
+    fig.update_xaxes(title_text='Time in Bars')
+
+    if out is None:
+        fig.show()
+    else:
+        with out:
+            init_notebook_mode()
+            iplot(fig)
 
 
 def my_process_dataframe_timeline_patch(args):

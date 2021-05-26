@@ -157,35 +157,3 @@ def h2_heading(text: str):
         value="<h2>" + text + "<h2>",
         placeholder=text,
     )
-
-
-### PLOTS ###
-# TODO delete
-def bar_plot_group(left_data: list, left_names: List[str], left_title: str, right_data: list, right_names: List[str], right_title: str, headline: str = None):
-    left = widgets.Output()
-    right = widgets.Output()
-    hbox = widgets.HBox([left, right])
-
-    left_h = widgets.HTML(
-        value="<h4>" + left_title + "<h4>",
-        placeholder=left_title
-    )
-
-    right_h = widgets.HTML(
-        value="<h4>" + right_title + "<h4>",
-        placeholder=right_title
-    )
-
-    with left:
-        display(left_h)
-    with right:
-        display(right_h)
-
-    multi_evaluation_bars(left_data, left, left_names)
-    multi_evaluation_bars(right_data, right, right_names)
-
-    if headline is not None:
-        h = h2_heading(headline)
-        return widgets.VBox([h, hbox])
-    else:
-        return hbox
