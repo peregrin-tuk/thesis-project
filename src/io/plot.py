@@ -165,7 +165,7 @@ def __create_evaluation_bar_traces(data: list, names: list, color: list = None):
 ###     CUSTOM PIANOROLL    ###
 ###############################
 
-def plotly_pianoroll(sequence: PrettyMIDI, out: Output = None):
+def plotly_pianoroll(sequence: PrettyMIDI, title: str = None, out: Output = None):
 
     px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
 
@@ -175,9 +175,10 @@ def plotly_pianoroll(sequence: PrettyMIDI, out: Output = None):
     for i, note in enumerate(sequence.instruments[0].notes):
         df.loc[i] = [note.start, note.end, note.pitch, note.velocity]
 
-    fig = px.timeline(df, x_start="start", x_end="end", y="pitch", color="velocity", labels=dict(x="Time in Bars", y="Pitch", color="Velocity"))
+    fig = px.timeline(df, x_start="start", x_end="end", y="pitch", color="velocity", title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"})
     fig.layout.xaxis.type = 'linear'
     fig.update_yaxes(dtick=1, showgrid=True)
+    fig.update_xaxes(title_text='Time in Bars')
 
     if out is None:
         fig.show()
@@ -185,6 +186,13 @@ def plotly_pianoroll(sequence: PrettyMIDI, out: Output = None):
         with out:
             init_notebook_mode()
             iplot(fig)
+
+
+def multitrack_plotly_pianoroll(sequences: List[PrettyMIDI], names: List[str], title: str = None, out: Output = None):
+    pass
+
+def animated_plotly_pianoroll(sequences: List[PrettyMIDI], title: str = None, out: Output = None):
+    pass
 
 
 def my_process_dataframe_timeline_patch(args):
