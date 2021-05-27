@@ -229,9 +229,9 @@ def animated_plotly_pianoroll(sequences: List[PrettyMIDI], step_names: List[str]
             i += 1
 
     if args is None: args = {}
-    fig = px.timeline(df, animation_frame="step", x_start="start", x_end="end", y="pitch", color="velocity", range_y=pitch_range, range_color=[0, 127], title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"}, **args)
+    fig = px.timeline(df, animation_frame="step", x_start="start", x_end="end", y="pitch", range_y=pitch_range, title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"}, **args)
     fig.layout.xaxis.type = 'linear'
-    fig.update_yaxes(dtick=1, showgrid=True, type="category")
+    fig.update_yaxes(dtick=1, showgrid=True)
     fig.update_xaxes(title_text='Time in Bars')
 
     if out is None:

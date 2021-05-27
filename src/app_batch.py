@@ -132,10 +132,7 @@ class AppBatch:
 
             # evaluate adaptation variance (intra set distance)
             if len(adaptations) > 1:
-                print('variance input', [cr_set.output_sequence.sequence for cr_set in adaptations])
                 adaptation_variance = self.evaluation.evaluate_variance([cr_set.output_sequence.sequence for cr_set in adaptations])
-                print('variance for set' + str(i))
-                pprint(adaptation_variance)
 
             # TEST calculate average similarity values for adaptations set
             adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([cr_set.output_similarity for cr_set in adaptations])
