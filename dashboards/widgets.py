@@ -135,7 +135,8 @@ def paginationSlider(number: int, description: str):
 
 def iconButton(icon: str, description: str = '', style: str = 'info'):
     return widgets.Button(
-        description=description,
+        tooltip=description,
+        description='',
         disabled=False,
         button_style=style,
         icon=icon,
