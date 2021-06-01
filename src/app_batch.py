@@ -30,6 +30,7 @@ class AppBatch:
         self.generator = None
         self.checkpoint = None
         self.temperature = None
+        self.result = None
 
         self.get_generators()
         self.set_similarity_reference(1) # set default normalization values
