@@ -233,6 +233,7 @@ def animated_plotly_pianoroll(sequences: List[PrettyMIDI], step_names: List[str]
     fig.layout.xaxis.type = 'linear'
     fig.update_yaxes(dtick=1, showgrid=True)
     fig.update_xaxes(title_text='Time in Bars')
+    fig.update_traces(width=1)
 
     if out is None:
         fig.show()

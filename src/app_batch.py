@@ -1,5 +1,4 @@
 from pathlib import Path
-from pprint import pprint
 from ipywidgets import Output
 from definitions import SequenceType
 from src.io.input import loadMidiFile
@@ -103,7 +102,7 @@ class AppBatch:
         self.ref_set = ref_set['name'] + ' (' + ref_set['source'] + ')'
 
 
-    def run(self, input_file_path: str, generation_amount: int, adaptation_amount: int, store_results: bool = True):
+    def run(self, input_file_path: str, generation_amount: int, store_results: bool = True):
         self.__clear_log() 
 
         # construct melodydata from input
@@ -122,36 +121,22 @@ class AppBatch:
             generation_similarity = self.evaluation.evaluate_similarity(gen_data.sequence, input_data.sequence)
             gen_data.evaluation = generation_similarity
 
-            # adaptations
-            adaptations = []
+            self.__log("Creating adaptation of melody " + str(i+1) + "/" + str(generation_amount) + "...")
+            adaptation = self.__run_single_adaptation(input_data, gen_data)
 
-            self.__log("Creating " + str(adaptation_amount) + " adaptations of generation " + str(i+1) + "...")
-            for _ in range(0, adaptation_amount):
-                cr_set = self.__run_single_adaptation(input_data, gen_data)
-                adaptations.append(cr_set)
-
-            # evaluate adaptation variance (intra set distance)
-            if len(adaptations) > 1:
-                adaptation_variance = self.evaluation.evaluate_variance([cr_set.output_sequence.sequence for cr_set in adaptations])
-
-            # TEST calculate average similarity values for adaptations set
-            adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([cr_set.output_similarity for cr_set in adaptations])
-
-            generations.append({'gen_data': gen_data,
-                                'adaptations': adaptations,
-                                'adaptation_set_variance': adaptation_variance,
-                                'adaptation_set_avg_similarity': adaptation_avg_similarity})
+            generations.append(adaptation)
 
         # evaluate generation variance (intra set distance)
         generation_variance = None
+        adaptation_variance = None
         if len(generations) > 1:
-            generation_variance = self.evaluation.evaluate_variance([g['gen_data'].sequence for g in generations])
+            generation_variance = self.evaluation.evaluate_variance([g.generated_base_sequence.sequence for g in generations])
+            adaptation_variance = self.evaluation.evaluate_variance([g.output_sequence.sequence for g in generations])
 
 
         # TEST calculate average similarity values for generations set and all adaptation sets
-        generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g['gen_data'].evaluation for g in generations])
-        adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g['adaptation_set_avg_similarity'] for g in generations])
-        adaptation_avg_variance = self.evaluation.calc_avg_from_similarity_dicts([g['adaptation_set_variance'] for g in generations])
+        generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g.generation_similarity for g in generations])
+        adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g.output_similarity for g in generations])
         
 
         # store set to database
@@ -163,10 +148,10 @@ class AppBatch:
         # return list cr sets + avg sim + variance
         self.result = {
             'generations': generations,
-            'generation_set_variance': generation_variance,
-            'generation_set_avg_similarity': generation_avg_similarity,
+            'generation_avg_similarity': generation_avg_similarity,
             'adaptation_avg_similarity': adaptation_avg_similarity,
-            'adaptation_avg_variance': adaptation_avg_variance,
+            'generation_variance': generation_variance,
+            'adaptation_variance': adaptation_variance,
         }
 
         return self.result

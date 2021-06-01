@@ -7,7 +7,7 @@ from typing import List
 
 ### STYLES ###
 
-style = {
+description_style = {
     'description_width': 'initial',
     }
 
@@ -31,7 +31,7 @@ inputSelect = widgets.Dropdown(
     options=[('...', 1)],
     value=1,
     description='Select Input:',
-    style=style
+    style=description_style
 )
 
 inputUpload = widgets.FileUpload(
@@ -52,7 +52,7 @@ checkpointSelect = widgets.Dropdown(
     options=[('...', 1)],
     value=1,
     # description='Model & Checkpoint:',
-    style=style
+    style=description_style
 )
 
 tempSlider = widgets.FloatSlider(
@@ -69,7 +69,7 @@ generationAmount = widgets.BoundedIntText(
     min=0,
     max=50,
     step=1,
-    # description='Amount of generations:',
+    # description='Amount:',
     disabled=False,
     width=100
 )
@@ -92,15 +92,6 @@ stepsSelect = widgets.SelectMultiple(
     #value=['Oranges'], # set to last selected ?
     #rows=10, # set to len(ops)
     #description='Steps',
-)
-
-adaptationAmount = widgets.BoundedIntText(
-    value=10,
-    min=0,
-    max=50,
-    step=1,
-    # description='Amount of different adaptations per generation:',
-    disabled=False
 )
 
 
@@ -142,12 +133,14 @@ def paginationSlider(number: int, description: str):
         max=number
     )
 
-refreshButton = widgets.Button(
-    description=' refresh',
-    disabled=False,
-    button_style='info',
-    icon='refresh',
-)
+def iconButton(icon: str, description: str = '', style: str = 'info'):
+    return widgets.Button(
+        description=description,
+        disabled=False,
+        button_style=style,
+        icon=icon,
+        layout=Layout(width='36px', height='36px')
+    )
 
 
 ### HEADINGS ###
