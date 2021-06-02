@@ -64,6 +64,7 @@ tempSlider = widgets.FloatSlider(
 generationAmount = widgets.BoundedIntText(
     value=1,
     min=1,
+    max=1000,
     step=1,
     # description='Amount:',
     disabled=False,

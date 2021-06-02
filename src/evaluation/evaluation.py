@@ -92,7 +92,7 @@ class Evaluation():
 
     def calc_meta_scores(self, evaluation_dict: dict):
         total = 0
-        for key, value in evaluation_dict:
+        for key, value in evaluation_dict.items():
             total += value
         avg = total / float(len(evaluation_dict))
 
