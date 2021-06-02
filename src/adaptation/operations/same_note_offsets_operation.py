@@ -59,8 +59,8 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
                 if offset in taken_offsets:
                     note_idx = p.index(n)
                     offset_idx = allowed_offsets.index(offset)
-                    if allowed_offsets[offset_idx-2] not in taken_offsets:
-                        p.notes[note_idx-1].offset = allowed_offsets[offset_idx-2]
+                    if allowed_offsets[offset_idx-1] not in taken_offsets:
+                        p.notes[note_idx-1].offset = allowed_offsets[offset_idx-1]
                         taken_offsets.append(n.offset)
                     elif offset_idx < len(allowed_offsets) - 1 and allowed_offsets[offset_idx+1] not in taken_offsets:
                         n.offset = allowed_offsets[offset_idx+1]
@@ -72,6 +72,7 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
 
         # shorten note length of overlapping notes
         for p in base.sequence.parts:
+            p = p.sorted
             # print('part length', len(p.notes.notes))
             # for n in p.notes:
             for i in range(0, len(p.notes.elements)):
@@ -82,8 +83,10 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
                 # print('offset', n.offset)
                 # print('length', n.quarterLength)
                 # if note_idx < (len(p.notes.notes) - 1): print('next offset', p.notes.elements[note_idx].offset)
-                if note_idx < (len(p.notes.notes) - 1) and n.offset + n.quarterLength > p.notes.elements[note_idx+1].offset:
-                    n.quarterLength = p.notes[note_idx+1].offset - n.offset
+                if note_idx < (len(p.notes.notes) - 1):
+                    next_offset = p.notes.elements[note_idx+1].offset
+                if note_idx < (len(p.notes.notes) - 1) and n.offset + n.quarterLength > next_offset and next_offset > n.offset:
+                    n.quarterLength = next_offset - n.offset
                     # print('new length for note ' + str(note_idx) + ': ' + str(n.quarterLength))
         
  

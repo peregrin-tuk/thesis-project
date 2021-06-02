@@ -194,11 +194,11 @@ def multitrack_plotly_pianoroll(sequences: List[PrettyMIDI], names: List[str], t
     
     px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
 
-    df = pd.DataFrame(columns=['Sequence', 'Start', 'End', 'Pitch', 'Velocity'])
+    df = pd.DataFrame(columns=['Sequence', 'Start', 'End', 'Pitch', 'Velocity', 'Index'])
     i = 0
     for s, sequence in enumerate(sequences):
         for note in sequence.instruments[0].notes:
-            df.loc[i] = [names[s], note.start, note.end, note.pitch, note.velocity]
+            df.loc[i] = [names[s], note.start, note.end, note.pitch, note.velocity, i]
             i += 1
 
     if args is None: args = {}
@@ -221,15 +221,15 @@ def multitrack_plotly_pianoroll(sequences: List[PrettyMIDI], names: List[str], t
 def animated_plotly_pianoroll(sequences: List[PrettyMIDI], step_names: List[str], title: str = None, out: Output = None, pitch_range: List[int] = None, args: dict = None):
     px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
 
-    df = pd.DataFrame(columns=['step', 'start', 'end', 'pitch', 'velocity'])
+    df = pd.DataFrame(columns=['Step', 'Start', 'End', 'Pitch', 'Velocity', 'Index'])
     i = 0
     for s, sequence in enumerate(sequences):
         for note in sequence.instruments[0].notes:
-            df.loc[i] = [step_names[s], note.start, note.end, note.pitch, note.velocity]
+            df.loc[i] = [step_names[s], note.start, note.end, note.pitch, note.velocity, i]
             i += 1
 
     if args is None: args = {}
-    fig = px.timeline(df, animation_frame="step", x_start="start", x_end="end", y="pitch", range_y=pitch_range, title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"}, **args)
+    fig = px.timeline(df, animation_frame="Step", x_start="Start", x_end="End", y="Pitch", range_y=pitch_range, title=title, **args)
     fig.layout.xaxis.type = 'linear'
     fig.update_yaxes(dtick=1, showgrid=True)
     fig.update_xaxes(title_text='Time in Bars')
