@@ -165,7 +165,7 @@ def store_midi(data: MelodyData):
 
 
 # CHECK not yet tested
-def store_set(cr_sets: list,avg_gen_evaluation: dict, avg_output_evaluation: dict, notes: str = None):
+def store_set(cr_sets: list, avg_gen_evaluation: dict, avg_output_evaluation: dict, notes: str = None):
     conn = create_connection()
     cursor = conn.cursor()
     date = datetime.now()

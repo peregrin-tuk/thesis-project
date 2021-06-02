@@ -1,8 +1,5 @@
-from IPython.display import display
-from src.io.plot import multi_evaluation_bars
 import ipywidgets as widgets
 from ipywidgets import Layout
-from typing import List
 
 
 ### STYLES ###
