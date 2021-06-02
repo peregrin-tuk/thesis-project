@@ -5,6 +5,9 @@ from src.evaluation.mgeval import analyze_pretty_midi, calc_distances, calc_intr
 
 class Evaluation():
 
+    pitch_related_keys = ['pitch_count', 'pitch_class_histogram', 'pitch_class_transition_matrix', 'avg_pitch_interval', 'pitch_range']
+    rhythm_related_keys = ['note_count', 'note_length_histogram', 'note_length_transition_matrix', 'avg_ioi']
+
     def __init__(self, normalization_factors: dict = None):
         self.normalization_factors = normalization_factors
 
@@ -86,6 +89,30 @@ class Evaluation():
                 result[result_key][feature_key] = avg
         
         return result
+
+    def calc_meta_scores(self, evaluation_dict: dict):
+        total = 0
+        for key, value in evaluation_dict:
+            total += value
+        avg = total / float(len(evaluation_dict))
+
+        total = 0
+        for key in self.pitch_related_keys:
+            total += evaluation_dict[key]
+        pitch_avg = total / float(len(self.pitch_related_keys))
+
+        total = 0
+        for key in self.rhythm_related_keys:
+            total += evaluation_dict[key]
+        rhythm_avg = total / float(len(self.rhythm_related_keys))
+
+
+        return {
+            'avg': avg,
+            'pitch_related_avg': pitch_avg,
+            'rhythm_related_avg': rhythm_avg
+        }
+
 
 
     def __normalize(self, evaluation_results: dict):
