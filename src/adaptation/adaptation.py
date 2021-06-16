@@ -8,8 +8,6 @@ from src.adaptation.abstract_adaptation_operation import AbstractAdaptationOpera
 from src.adaptation.adaptation_pipeline import AdaptationPipeline
 import src.adaptation.operations as operations_module
 
-from src.adaptation.operations.transpose_sequence_operation import TransposeSequenceOperation
-
 
 class Adaptation():
 

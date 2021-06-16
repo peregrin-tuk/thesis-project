@@ -1,4 +1,6 @@
 from pathlib import Path
+from src.generation.generators.musicrnn_generator import MusicRNNGenerator
+from src.generation.generators.musicvae_generator import MusicVAEGenerator
 from ipywidgets import Output
 from definitions import SequenceType
 from src.io.input import loadMidiFile
@@ -157,7 +159,7 @@ class AppBatch:
 
         return self.result
 
-    # CHECK and test
+
     def __run_single_adaptation(self, input_data: MelodyData, gen_data: MelodyData):
                
         # run adaptation
@@ -180,7 +182,14 @@ class AppBatch:
 
 
     def __run_single_generation(self):
-        gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
+        if isinstance(self.generator, MusicVAEGenerator):
+            gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
+        elif isinstance(self.generator, MusicRNNGenerator):
+            pass
+            # gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
+        else:
+            self.__log("The selected generator is currently not supported.")
+            return
         self.gen_data = MelodyData(note_seq_to_pretty_midi(gen_base['sequence']), SequenceType.GEN_BASE, { 'generation': gen_base['meta'] })
         return self.gen_data
 

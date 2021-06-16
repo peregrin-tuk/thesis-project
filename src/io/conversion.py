@@ -132,6 +132,8 @@ def pretty_midi_to_music21(midi: PrettyMIDI):
             part.append(note21)
             part.notes[-1].offset = _seconds_to_quarterLength(note.start, qpm)
 
+        part.duration.quarterLength = float(part.notes[-1].offset) + float(part.notes[-1].quarterLength)
+
         score.append(part)
         score.makeMeasures()
     

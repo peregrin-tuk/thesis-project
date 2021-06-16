@@ -28,6 +28,7 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData):
         t1 = time.time()
 
+        # CHECK maybe shift this + creation of allowed offset list to input analysis
         if base.sequence.timeSignature is not None:
             beat_count = base.sequence.timeSignature.numerator
         else:
@@ -36,6 +37,7 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
         bar_count = round( float(control.sequence.duration.quarterLength) / beat_count )
         allowed_offsets = []
 
+        # create list with allowed offsets
         beat = 0
         for beat_set in control.analysis[note_offsets_per_beat.__name__]:
             for relative_offset in beat_set:
@@ -44,6 +46,7 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
             beat += 1
         allowed_offsets.sort()
 
+        # change offsets to closests allowed
         for p in base.sequence.parts:
             for n in p.notes:
                 offset = float(n.offset)
@@ -61,7 +64,7 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
                     offset_idx = allowed_offsets.index(offset)
                     if allowed_offsets[offset_idx-1] not in taken_offsets:
                         p.notes[note_idx-1].offset = allowed_offsets[offset_idx-1]
-                        taken_offsets.append(n.offset)
+                        taken_offsets.append(p.notes[note_idx-1].offset)
                     elif offset_idx < len(allowed_offsets) - 1 and allowed_offsets[offset_idx+1] not in taken_offsets:
                         n.offset = allowed_offsets[offset_idx+1]
                         taken_offsets.append(n.offset)
@@ -88,7 +91,6 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
                 if note_idx < (len(p.notes.notes) - 1) and n.offset + n.quarterLength > next_offset and next_offset > n.offset:
                     n.quarterLength = next_offset - n.offset
                     # print('new length for note ' + str(note_idx) + ': ' + str(n.quarterLength))
-        
  
         t2 = time.time()
         return super().create_meta_and_update_base(base, self.__class__.__name__, t2-t1, base.sequence, {})
