@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import copy
 from sqlite3 import Error
 from datetime import datetime
 from pathlib import Path
@@ -106,7 +107,7 @@ def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, r
     gen_dur = gen_base_data.meta['generation']['gen_dur']
     gen_model = gen_base_data.meta['generation']['model'] + ' ' + gen_base_data.meta['generation']['checkpoint']
     gen_temperature = gen_base_data.meta['generation']['temperature']
-    adapt_steps = result_data.meta['adaptation']['steps']
+    adapt_steps = copy.deepcopy(result_data.meta['adaptation']['steps'])
     adapt_dur = result_data.meta['adaptation']['total_duration']
 
     adapt_steps_json = []
@@ -133,6 +134,8 @@ def store_midi(data: MelodyData):
     Returns:
         int: id of the inserted row
     """
+    data = copy.deepcopy(data)
+
     conn = create_connection()
     cursor = conn.cursor()
     date = datetime.now()
@@ -169,6 +172,10 @@ def store_set(cr_sets: list, avg_gen_evaluation: dict, avg_output_evaluation: di
 
     sql_insert_set = """INSERT INTO test_sets(date_created, avg_gen_evaluation, avg_output_evaluation, notes)
               VALUES(?, ?, ?, ?)"""
+
+    avg_gen_evaluation = copy.deepcopy(avg_gen_evaluation)
+    avg_output_evaluation = copy.deepcopy(avg_output_evaluation)
+    
 
     avg_gen_evaluation_json = json.dumps(dict_values_to_string(avg_gen_evaluation))
     avg_output_evaluation_json = json.dumps(dict_values_to_string(avg_output_evaluation))
