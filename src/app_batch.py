@@ -118,7 +118,7 @@ class AppBatch:
         for i in range(0, generation_amount):
             # generate
             self.__log("Generating base melody " + str(i+1) + "/" + str(generation_amount) + "...")
-            gen_data = self.__run_single_generation()
+            gen_data = self.__run_single_generation(input_data)
 
             # evaluate generation similarity (distance to input)
             generation_similarity = self.evaluation.evaluate_similarity(gen_data.sequence, input_data.sequence)
@@ -181,12 +181,11 @@ class AppBatch:
                                result.evaluation)
 
 
-    def __run_single_generation(self):
+    def __run_single_generation(self, input_data):
         if isinstance(self.generator, MusicVAEGenerator):
             gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
         elif isinstance(self.generator, MusicRNNGenerator):
-            pass
-            # gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
+            gen_base = self.generator.generate(primer_sequence=input_data.sequence, length_in_quarters = 16, temperature=self.temperature)
         else:
             self.__log("The selected generator is currently not supported.")
             return

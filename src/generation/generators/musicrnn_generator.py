@@ -1,10 +1,11 @@
 import itertools
+from src.generation.generation import generate
 import time
 from enum import Enum
 from magenta.models.melody_rnn import melody_rnn_sequence_generator
 from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
-from note_seq import NoteSequence, extract_subsequence, trim_note_sequence
+from note_seq import NoteSequence, extract_subsequence, trim_note_sequence, midi_to_note_sequence, note_sequence_to_pretty_midi
 from src.generation import AbstractGenerator
 
 _CHECKPOINTS = {
@@ -23,10 +24,11 @@ class MusicRNNGenerator(AbstractGenerator):
         )
     )
 
-    def __init__(self, checkpoint=Checkpoint.ATTENTION):
+    def __init__(self, checkpoint=Checkpoint.ATTENTION, log=None):
         super().__init__()
+        self.log = log
 
-        print("[GEN] Initializing Music RNN with checkpoint '" +
+        self.__log("[GEN] Initializing Music RNN with checkpoint '" +
               checkpoint.name + "'...")
 
         t1 = time.time()
@@ -37,14 +39,20 @@ class MusicRNNGenerator(AbstractGenerator):
         self.model.initialize()
         t2 = time.time()
 
-        print('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
+        self.__log('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
 
 
-    def generate(self, primer_sequence=NoteSequence(), length_in_quarters=16, temperature=0.4):
+    def generate(self, primer_sequence=None, length_in_quarters=16, temperature=0.4):
         t1 = time.time()
+        if primer_sequence is None:
+            primer_sequence = NoteSequence()
+        else:
+            primer_sequence = midi_to_note_sequence(primer_sequence)
         generator_options, start, end = self.__setupGeneratorOptions(primer_sequence, length_in_quarters, temperature)
         generated_sequence = self.model.generate(primer_sequence, generator_options)
-        generated_sequence = trim_note_sequence(generated_sequence, start, end)
+        temp = note_sequence_to_pretty_midi(generated_sequence)
+        generated_sequence = midi_to_note_sequence(temp)
+        generated_sequence = extract_subsequence(generated_sequence, start, end)
         t2 = time.time()
 
         return {
@@ -86,13 +94,14 @@ class MusicRNNGenerator(AbstractGenerator):
         primer_end_time = (max(n.end_time for n in primer_sequence.notes) if primer_sequence.notes else 0)
         total_time = primer_end_time + num_steps * seconds_per_step
 
-        print("num_steps: " + str(num_steps))
-        print("qpm: " + str(qpm))
-        print("seconds_per_step: " + str(seconds_per_step))
-        print("primer_end_time: " + str(primer_end_time))
-        print("total_time: " + str(total_time))
-
         generator_options = generator_pb2.GeneratorOptions()
         generator_options.args['temperature'].float_value = temperature
         generator_options.generate_sections.add(start_time=primer_end_time + seconds_per_step, end_time=total_time)
         return generator_options, primer_end_time, total_time
+
+    def __log(self, msg: str):
+        if self.log is None:
+            print(msg)
+        else:
+            with self.log:
+                print(msg)
