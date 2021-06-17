@@ -34,6 +34,8 @@ class AppBatch:
         self.temperature = None
         self.result = None
 
+        db.create_tables()
+
         self.get_generators()
         self.set_similarity_reference(1) # set default normalization values
 
@@ -143,9 +145,9 @@ class AppBatch:
         
 
         # store set to database
-        self.__log("Saving results to database...")
         if store_results:
-            db.store_set(sum([g['adaptations'] for g in generations], []), generation_avg_similarity, adaptation_avg_similarity)
+            self.__log("Saving results to database...")
+            db.store_set(generations, generation_avg_similarity, adaptation_avg_similarity)
         self.__log("Done.")
 
         # return list cr sets + avg sim + variance

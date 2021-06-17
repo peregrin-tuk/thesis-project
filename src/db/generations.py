@@ -35,9 +35,7 @@ def create_tables():
                                     type integer NOT NULL,
                                     date_created timestamp NOT NULL,
                                     analysis text,
-                                    evaluation text,
-                                    set_id integer,
-                                    FOREIGN KEY (set_id) REFERENCES test_sets (id)
+                                    evaluation text
                                 );"""
 
     sql_generations_table = """CREATE TABLE IF NOT EXISTS generation_results (
@@ -51,9 +49,11 @@ def create_tables():
                                     gen_temperature real NOT NULL,
                                     adapt_dur real NOT NULL,
                                     adapt_steps text,
+                                    set_id integer,
                                     FOREIGN KEY (input_id) REFERENCES midi_analysis (id),
                                     FOREIGN KEY (gen_base_id) REFERENCES midi_analysis (id),
-                                    FOREIGN KEY (output_id) REFERENCES midi_analysis (id)
+                                    FOREIGN KEY (output_id) REFERENCES midi_analysis (id),
+                                    FOREIGN KEY (set_id) REFERENCES test_sets (id)
                                 );"""
 
     sql_testsets_table = """CREATE TABLE IF NOT EXISTS test_sets (
@@ -63,9 +63,6 @@ def create_tables():
                                     avg_output_evaluation text NOT NULL,
                                     notes text
                                 );"""
-
-    # NOTE analysis and adapt_settings are here expected to be json objects
-    # NOTE instead of adding new nullable columns for new features, consider creating a whole new DB with the new version
 
     conn = create_connection()
 
