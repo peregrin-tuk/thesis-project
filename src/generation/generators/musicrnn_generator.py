@@ -1,11 +1,10 @@
 import itertools
-from src.generation.generation import generate
 import time
 from enum import Enum
 from magenta.models.melody_rnn import melody_rnn_sequence_generator
 from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
-from note_seq import NoteSequence, extract_subsequence, trim_note_sequence, midi_to_note_sequence, note_sequence_to_pretty_midi
+from note_seq import NoteSequence, extract_subsequence, midi_to_note_sequence, note_sequence_to_pretty_midi
 from src.generation import AbstractGenerator
 
 _CHECKPOINTS = {
@@ -52,7 +51,7 @@ class MusicRNNGenerator(AbstractGenerator):
         generated_sequence = self.model.generate(primer_sequence, generator_options)
         temp = note_sequence_to_pretty_midi(generated_sequence)
         generated_sequence = midi_to_note_sequence(temp)
-        generated_sequence = extract_subsequence(generated_sequence, start, end)
+        generated_sequence = extract_subsequence(generated_sequence, start, generated_sequence.total_time)
         t2 = time.time()
 
         return {
@@ -72,7 +71,8 @@ class MusicRNNGenerator(AbstractGenerator):
         generated_sequences = []
         for i in range(0, number):
             generated_sequence = self.model.generate(primer_sequence, generator_options)
-            generated_sequences.append(generated_sequence) # extract_subsequence(generated_sequence, start, end)
+            generated_sequence = extract_subsequence(generated_sequence, start, end)
+            generated_sequences.append(generated_sequence)
         t2 = time.time()
 
         return {

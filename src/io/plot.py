@@ -189,7 +189,7 @@ def plotly_pianoroll(sequence: PrettyMIDI, title: str = None, out: Output = None
             init_notebook_mode()
             iplot(fig)
 
-# CHECK no funciona! (colors are wrong, items sometimes get incorrect widths, which is strange)
+
 def multitrack_plotly_pianoroll(sequences: List[PrettyMIDI], names: List[str], title: str = None, out: Output = None, pitch_range: List[int] = None, args: dict = None):
     
     px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
@@ -203,7 +203,7 @@ def multitrack_plotly_pianoroll(sequences: List[PrettyMIDI], names: List[str], t
 
     if args is None: args = {}
     fig = px.timeline(df, facet_row="Sequence", color="Sequence", x_start="Start", x_end="End", y="Pitch", range_y=pitch_range, title=title, height=800, **args)
-    fig.layout.xaxis.type = 'linear'
+    fig.update_xaxes(type = 'linear')
     fig.update_yaxes(dtick=1, showgrid=True)
     fig.update_traces(width=1)
     fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))

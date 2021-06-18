@@ -1,18 +1,18 @@
 from pathlib import Path
-from src.generation.generators.musicrnn_generator import MusicRNNGenerator
-from src.generation.generators.musicvae_generator import MusicVAEGenerator
 from ipywidgets import Output
-from definitions import SequenceType
+
+from definitions import ROOT_DIR, SequenceType
 from src.io.input import loadMidiFile
 from src.datatypes.melody_data import MelodyData
 from src.datatypes.call_response_set import CallResponseSet
 from src.adaptation import Adaptation
 from src.generation import get_available_generators
+from src.generation.generators.musicrnn_generator import MusicRNNGenerator
+from src.generation.generators.musicvae_generator import MusicVAEGenerator
 from src.db import generations as db
 from src.db.reference_sets import fetch_ref_set_by_id, get_normalization_values_of_ref_set
 from src.evaluation.evaluation import Evaluation
 from src.io.conversion import note_seq_to_pretty_midi
-from definitions import ROOT_DIR
 
 
 class AppBatch:
@@ -80,7 +80,7 @@ class AppBatch:
         checkpoint = self.generator_list[generator_id][2]
 
         if generator != self.generator or checkpoint != self.checkpoint:
-            self.__log("Initializing generation model. This may take 1 (RNN) to 4 (VAE) minutes...")
+            self.__log("Initializing generation model. This may take 10 seconds (RNN) to 5 minutes (VAE)...")
             self.generator = generator(checkpoint, log=self.log)
             self.checkpoint = checkpoint
 
@@ -119,6 +119,7 @@ class AppBatch:
 
         for i in range(0, generation_amount):
             # generate
+            self.__clear_log()
             self.__log("Generating base melody " + str(i+1) + "/" + str(generation_amount) + "...")
             gen_data = self.__run_single_generation(input_data)
 

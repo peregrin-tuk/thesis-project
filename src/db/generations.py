@@ -164,7 +164,6 @@ def store_midi(data: MelodyData):
     return last_id
 
 
-# CHECK not yet tested
 def store_set(cr_sets: list, avg_gen_evaluation: dict, avg_output_evaluation: dict, notes: str = None):
     conn = create_connection()
     cursor = conn.cursor()
@@ -188,7 +187,6 @@ def store_set(cr_sets: list, avg_gen_evaluation: dict, avg_output_evaluation: di
         store_generation_result(cr_set.input_sequence, cr_set.generated_base_sequence, cr_set.output_sequence, set_id)
 
 
-# CHECK not yet tested
 def update_notes_in_set(set_id: int, notes: str):
     """ 
     Updates the notes for a test set.
