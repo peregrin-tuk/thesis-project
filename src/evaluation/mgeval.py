@@ -68,6 +68,8 @@ def __analyze(feature, bpm: int, length_in_bars: int = None, normalize: bool = F
         'note_length_histogram': metrics.note_length_hist(feature, pause_event=True),
         'note_length_transition_matrix': metrics.note_length_transition_matrix(feature, pause_event=True),
         'avg_ioi': metrics.avg_IOI(feature),
+        'ioi_histogram': metrics.ioi_hist(feature),
+        'ioi_transition_matrix': metrics.ioi_transition_matrix(feature),
     }
 
 

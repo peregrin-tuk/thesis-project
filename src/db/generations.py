@@ -185,6 +185,8 @@ def store_set(cr_sets: list, avg_gen_evaluation: dict, avg_output_evaluation: di
 
     for cr_set in cr_sets:
         store_generation_result(cr_set.input_sequence, cr_set.generated_base_sequence, cr_set.output_sequence, set_id)
+    
+    return set_id
 
 
 def update_notes_in_set(set_id: int, notes: str):

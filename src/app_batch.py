@@ -148,7 +148,7 @@ class AppBatch:
         # store set to database
         if store_results:
             self.__log("Saving results to database...")
-            db.store_set(generations, generation_avg_similarity, adaptation_avg_similarity)
+            db_set_id = db.store_set(generations, generation_avg_similarity, adaptation_avg_similarity)
         self.__log("Done.")
 
         # return list cr sets + avg sim + variance
@@ -158,6 +158,7 @@ class AppBatch:
             'adaptation_avg_similarity': adaptation_avg_similarity,
             'generation_variance': generation_variance,
             'adaptation_variance': adaptation_variance,
+            'db_set_id': db_set_id,
         }
 
         return self.result

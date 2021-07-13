@@ -6,7 +6,7 @@ from src.evaluation.mgeval import analyze_pretty_midi, calc_distances, calc_intr
 class Evaluation():
 
     pitch_related_keys = ['pitch_count', 'pitch_class_histogram', 'pitch_class_transition_matrix', 'avg_pitch_interval', 'pitch_range']
-    rhythm_related_keys = ['note_count', 'note_length_histogram', 'note_length_transition_matrix', 'avg_ioi']
+    rhythm_related_keys = ['note_count', 'note_length_histogram', 'note_length_transition_matrix', 'avg_ioi', 'ioi_histogram', 'ioi_transition_matrix']
 
     def __init__(self, normalization_factors: dict = None):
         self.normalization_factors = normalization_factors

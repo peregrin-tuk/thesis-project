@@ -414,6 +414,57 @@ class metrics(object):
 
             return note_length_hist / np.sum(note_length_hist)
 
+    def ioi_hist(self, feature, track_num=1, normalize=True):
+        """
+        ioi_hist (Inter-Onset-Interval histogram):
+        The histogram does not use the exact ioi of every note, but categorizes each length as an allowed length class.
+
+        To extract the ioi histogram, we first define a set of allowable beat length classes:
+        [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet].
+        The classification of each event is performed by dividing the basic unit into the length of (barlength)/96, and each note length is quantized to the closest length category.
+
+        Args:
+        'track_num' : specify the track number in the midi pattern, default is 1 (the second track).
+        'normalize' : If true, normalize by vector sum.
+
+        Returns:
+        'ioi_hist': The output vector has a length of either 12 (or 24 when pause_event is True).
+        """
+
+        pattern = feature['midi_pattern']
+        note_length_hist = np.zeros((12))
+        pattern.make_ticks_abs()
+        resolution = pattern.resolution
+        # basic unit: bar_length/96
+        for i in range(0, len(pattern[track_num])):
+            if type(pattern[track_num][i]) == midi.events.TimeSignatureEvent:
+                time_sig = pattern[track_num][i].data
+                bar_length = time_sig[track_num] * resolution * 4 / 2**(time_sig[1])
+            elif type(pattern[track_num][i]) == midi.events.NoteOnEvent and pattern[track_num][i].data[1] != 0:
+                if 'time_sig' not in locals():  # set default bar length as 4 beat
+                    bar_length = 4 * resolution
+                    time_sig = [4, 2, 24, 8]
+                unit = bar_length / 96.
+                hist_list = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 72, unit * 36, unit * 18, unit * 9, unit * 32, unit * 16, unit * 8]
+                current_tick = pattern[track_num][i].tick
+                # find next note on
+                for j in range(i+1, len(pattern[track_num])):
+                    if type(pattern[track_num][j]) == midi.events.NoteOnEvent:
+                        if pattern[track_num][j].tick >= current_tick:
+
+                            ioi = pattern[track_num][j].tick - current_tick
+                            distance = np.abs(np.array(hist_list) - ioi)
+                            idx = distance.argmin()
+                            note_length_hist[idx] += 1
+                            break
+
+        if normalize is False:
+            return note_length_hist
+
+        elif normalize is True:
+
+            return note_length_hist / np.sum(note_length_hist)
+
     def note_length_transition_matrix(self, feature, track_num=1, normalize=0, pause_event=False):
         """
         note_length_transition_matrix (Note length transition matrix):
@@ -517,6 +568,69 @@ class metrics(object):
                                         idx = last_idx
                                         transition_matrix[last_idx][idx + 12] += 1
                                 break
+
+        if normalize == 0:
+            return transition_matrix
+
+        elif normalize == 1:
+
+            sums = np.sum(transition_matrix, axis=1)
+            sums[sums == 0] = 1
+            return transition_matrix / sums.reshape(-1, 1)
+
+        elif normalize == 2:
+
+            return transition_matrix / sum(sum(transition_matrix))
+
+        else:
+            print("invalid normalization mode, return unnormalized matrix")
+            return transition_matrix
+
+    def ioi_transition_matrix(self, feature, track_num=1, normalize=0):
+        """
+        note_length_transition_matrix (Note length transition matrix):
+        Similar to the pitch class transition matrix, the note length tran- sition matrix provides useful information for rhythm description.
+
+        Args:
+        'track_num' : specify the track number in the midi pattern, default is 1 (the second track).
+        'normalize' : If true, normalize by vector sum.
+
+        'normalize' : If set to 0, return transition without normalization.
+                      If set to 1, normalizae by row.
+                      If set to 2, normalize by entire matrix sum.
+
+        Returns:
+        'transition_matrix': The output feature dimension is 12 × 12 (or 24 x 24 when pause_event is True).
+        """
+        pattern = feature['midi_pattern']
+        transition_matrix = np.zeros((12, 12))
+        pattern.make_ticks_abs()
+        resolution = pattern.resolution
+        idx = None
+        # basic unit: bar_length/96
+        for i in range(0, len(pattern[track_num])):
+            if type(pattern[track_num][i]) == midi.events.TimeSignatureEvent:
+                time_sig = pattern[track_num][i].data
+                bar_length = time_sig[track_num] * resolution * 4 / 2**(time_sig[1])
+            elif type(pattern[track_num][i]) == midi.events.NoteOnEvent and pattern[track_num][i].data[1] != 0:
+                if 'time_sig' not in locals():  # set default bar length as 4 beat
+                    bar_length = 4 * resolution
+                    time_sig = [4, 2, 24, 8]
+                unit = bar_length / 96.
+                hist_list = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 72, unit * 36, unit * 18, unit * 9, unit * 32, unit * 16, unit * 8]
+                current_tick = pattern[track_num][i].tick
+                # find next note on
+                for j in range(i+1, len(pattern[track_num])):
+                    if type(pattern[track_num][j]) == midi.events.NoteOnEvent:
+                        if pattern[track_num][j].tick >= current_tick:
+                            note_length = pattern[track_num][j].tick - current_tick
+                            distance = np.abs(np.array(hist_list) - note_length)
+
+                            last_idx = idx
+                            idx = distance.argmin()
+                            if last_idx is not None:
+                                transition_matrix[last_idx][idx] += 1
+                            break
 
         if normalize == 0:
             return transition_matrix
