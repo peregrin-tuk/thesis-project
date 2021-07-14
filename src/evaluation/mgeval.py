@@ -56,15 +56,15 @@ def __analyze(feature, bpm: int, length_in_bars: int = None, normalize: bool = F
 
     return {
         'pitch_count': metrics.total_used_pitch(feature),
-        # 'pitch_count_per_bar': metrics.bar_used_pitch(feature, 1, length_in_bars), # CHECK calculation in core seems to return wrong results
+        'pitch_count_per_bar': metrics.bar_used_pitch(feature, 1, length_in_bars), # CHECK calculation in core seems to return wrong results
         'pitch_class_histogram': metrics.total_pitch_class_histogram(feature),
-        # 'pitch_class_histogram_per_bar': metrics.bar_pitch_class_histogram(feature, 0, bpm, length_in_bars), # CHECK only works when length in bars is given, should have reliable calculation here
+        'pitch_class_histogram_per_bar': metrics.bar_pitch_class_histogram(feature, 0, bpm, length_in_bars), # CHECK only works when length in bars is given, should have reliable calculation here
         'pitch_class_transition_matrix': metrics.pitch_class_transition_matrix(feature),
         'avg_pitch_interval': metrics.avg_pitch_shift(feature),
         'pitch_range': metrics.pitch_range(feature),
 
         'note_count': metrics.total_used_note(feature),
-        # 'note_count_per_bar': metrics.bar_used_note(feature, 1, length_in_bars), # CHECK calculation in core seems to return wrong results
+        'note_count_per_bar': metrics.bar_used_note(feature, 1, length_in_bars), # CHECK calculation in core seems to return wrong results
         'note_length_histogram': metrics.note_length_hist(feature, pause_event=True),
         'note_length_transition_matrix': metrics.note_length_transition_matrix(feature, pause_event=True),
         'avg_ioi': metrics.avg_IOI(feature),

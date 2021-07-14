@@ -57,6 +57,8 @@ def create_tables():
                                     note_length_histogram real NOT NULL,
                                     note_length_transition_matrix real NOT NULL,
                                     avg_ioi real NOT NULL,
+                                    ioi_histogram real NOT NULL,
+                                    ioi_transition_matrix real NOT NULL,
 
                                     FOREIGN KEY (set_id) REFERENCES reference_sets (id)
                                 );"""
@@ -91,7 +93,9 @@ def store_ref_data(
     note_count_per_bar: float,
     note_length_histogram: float,
     note_length_transition_matrix: float,
-    avg_ioi: float
+    avg_ioi: float,
+    ioi_histogram: float,
+    ioi_transition_matrix: float
 ):
     """ 
     Stores a set of similarity distances for a single call-and-response pair.
@@ -114,6 +118,8 @@ def store_ref_data(
         note_length_histogram (float): 
         note_length_transition_matrix (float): 
         avg_ioi (float): 
+        ioi_histogram (float): 
+        ioi_transition_matrix (float): 
 
     Returns:
         int: id of the inserted row
@@ -136,8 +142,10 @@ def store_ref_data(
                                 note_count_per_bar, 
                                 note_length_histogram, 
                                 note_length_transition_matrix, 
-                                avg_ioi)
-                                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                                avg_ioi,
+                                ioi_histogram,
+                                ioi_transition_matrix)
+                                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     cursor.execute(sql_insert_ref_data, (
         set_id,
@@ -154,7 +162,9 @@ def store_ref_data(
         note_count_per_bar,
         note_length_histogram,
         note_length_transition_matrix,
-        avg_ioi)
+        avg_ioi,
+        ioi_histogram,
+        ioi_transition_matrix)
     )
 
     conn.commit()
