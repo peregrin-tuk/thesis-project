@@ -37,7 +37,7 @@ class AppBatch:
         db.create_tables()
 
         self.get_generators()
-        self.set_similarity_reference(1) # set default normalization values
+        self.set_similarity_reference(5) # set default normalization values
 
 
     def get_adaptation_operations(self):
