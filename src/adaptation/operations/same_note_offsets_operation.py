@@ -55,42 +55,42 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
 
         
         # Spread simultaneous notes
+        # print("### Spread notes with same offset ###")
         for p in base.sequence.parts:
+            notes_to_delete = []
             taken_offsets = []
-            for n in p.notes:
-                offset = float(n.offset)
-                if offset in taken_offsets:
-                    note_idx = p.index(n)
-                    offset_idx = allowed_offsets.index(offset)
-                    if allowed_offsets[offset_idx-1] not in taken_offsets:
-                        p.notes[note_idx-1].offset = allowed_offsets[offset_idx-1]
-                        taken_offsets.append(p.notes[note_idx-1].offset)
-                    elif offset_idx < len(allowed_offsets) - 1 and allowed_offsets[offset_idx+1] not in taken_offsets:
-                        n.offset = allowed_offsets[offset_idx+1]
-                        taken_offsets.append(n.offset)
-                    else:
-                        p.pop(note_idx)
-                else:
-                    taken_offsets.append(n.offset)
+            for index, note in enumerate(p.notes):
+                offset = float(note.offset)
+                # print("note " + str(index) + " - offset " + str(offset))
+                offset_idx = allowed_offsets.index(offset)
+                for other in p.notes[index+1:]:
+                    if float(other.offset) == offset:
+                        if allowed_offsets[offset_idx-1] not in taken_offsets:
+                            note.offset = allowed_offsets[offset_idx-1]
+                            # print("# note " + str(p.index(note)-1) + " moved left to offset " + str(float(note.offset)))
+                            # print(float(p.notes[p.index(note)-1].offset))
+                        elif offset_idx < len(allowed_offsets) - 1 and allowed_offsets[offset_idx+1] not in taken_offsets:
+                            other.offset = allowed_offsets[offset_idx+1]
+                            taken_offsets.append(other.offset)
+                            # print("# note " + str(p.index(other)-1) + " moved right to offset " + str(float(other.offset)))
+                            # print(p.notes[p.index(other)-1].offset)
+                        else:
+                            notes_to_delete.append(other)
+                            # print("# note " + str(p.index(other)-1) + " offset " + str(float(other.offset)) + " added to remove list.")
+                taken_offsets.append(note.offset)
+            p.remove(notes_to_delete)
+
 
         # shorten note length of overlapping notes
         for p in base.sequence.parts:
             p = p.sorted
-            # print('part length', len(p.notes.notes))
             # for n in p.notes:
-            for i in range(0, len(p.notes.elements)):
-                n = p.notes.elements[i]
-                note_idx = i
-                # print('----------')
-                # print('note index', note_idx)
-                # print('offset', n.offset)
-                # print('length', n.quarterLength)
-                # if note_idx < (len(p.notes.notes) - 1): print('next offset', p.notes.elements[note_idx].offset)
-                if note_idx < (len(p.notes.notes) - 1):
-                    next_offset = p.notes.elements[note_idx+1].offset
-                if note_idx < (len(p.notes.notes) - 1) and n.offset + n.quarterLength > next_offset and next_offset > n.offset:
-                    n.quarterLength = next_offset - n.offset
-                    # print('new length for note ' + str(note_idx) + ': ' + str(n.quarterLength))
+            for index, note in enumerate(p.notes.elements):
+                if index < (len(p.notes.notes) - 1):
+                    next_offset = p.notes.elements[index+1].offset
+                if index < (len(p.notes.notes) - 1) and note.offset + note.quarterLength > next_offset and next_offset > note.offset:
+                    note.quarterLength = next_offset - note.offset
+                    # print('# new length for note ' + str(index) + ': ' + str(note.quarterLength))
  
         t2 = time.time()
         return super().create_meta_and_update_base(base, self.__class__.__name__, t2-t1, base.sequence, {})

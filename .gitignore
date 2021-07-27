@@ -1,6 +1,7 @@
 # custom
 /models
 /data/reference_data
+/data/generation_files
 /.VSCodeCounter
 
 # Byte-compiled / optimized / DLL files
