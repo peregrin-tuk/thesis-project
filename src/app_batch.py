@@ -149,6 +149,8 @@ class AppBatch:
         if store_results:
             self.__log("Saving results to database...")
             db_set_id = db.store_set(generations, generation_avg_similarity, adaptation_avg_similarity)
+        else:
+            db_set_id = "not available"
         self.__log("Done.")
 
         # return list cr sets + avg sim + variance
