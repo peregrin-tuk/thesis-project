@@ -62,7 +62,8 @@ class SameNoteOffsetsOperation(AbstractAdaptationOperation):
             for index, note in enumerate(p.notes):
                 offset = float(note.offset)
                 # print("note " + str(index) + " - offset " + str(offset))
-                offset_idx = allowed_offsets.index(offset)
+                rounding_temp = find_closest(allowed_offsets, offset)
+                offset_idx = allowed_offsets.index(rounding_temp)
                 for other in p.notes[index+1:]:
                     if float(other.offset) == offset:
                         if allowed_offsets[offset_idx-1] not in taken_offsets:

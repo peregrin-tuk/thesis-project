@@ -81,6 +81,15 @@ stepsSelect = widgets.SelectMultiple(
     options=['Operation 1', 'Operation 2', 'Operation 3'],
 )
 
+dbStoreCheckbox = widgets.Checkbox(
+    value=True,
+    description='Store results in database',
+    disabled=False,
+    indent=False
+)
+
+
+
 
 ### BUTTONS ###
 
