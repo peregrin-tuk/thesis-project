@@ -189,7 +189,13 @@ class AppBatch:
 
     def __run_single_generation(self, input_data):
         if isinstance(self.generator, MusicVAEGenerator):
-            gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
+            length = input_data.sequence.get_end_time()
+            note_count = 0
+            bar_count = 1
+            while (note_count < 3 * bar_count):
+                gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
+                note_count = len(gen_base['sequence'].notes)
+                bar_count = length / 4 # CHECK expecting 4/4 time signature, for 3/4 this number has to be 3
         elif isinstance(self.generator, MusicRNNGenerator):
             gen_base = self.generator.generate(primer_sequence=input_data.sequence, length_in_quarters = 16, temperature=self.temperature)
         else:
