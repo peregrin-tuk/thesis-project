@@ -120,7 +120,7 @@ def store_generation_result(input_data: MelodyData, gen_base_data: MelodyData, r
     cursor.execute(sql_insert_generation, (input_id, gen_base_id, output_id, date, gen_dur, gen_model, gen_temperature, adapt_dur, adapt_steps_json, set_id))
     
     conn.commit()
-    return cursor.lastrowid
+    return cursor.lastrowid, gen_base_id
 
 
 
@@ -183,10 +183,12 @@ def store_set(cr_sets: list, avg_gen_evaluation: dict, avg_output_evaluation: di
     set_id = cursor.lastrowid
     conn.commit()
 
+    generation_ids = []
     for cr_set in cr_sets:
-        store_generation_result(cr_set.input_sequence, cr_set.generated_base_sequence, cr_set.output_sequence, set_id)
+        _, gen_id = store_generation_result(cr_set.input_sequence, cr_set.generated_base_sequence, cr_set.output_sequence, set_id)
+        generation_ids.append(gen_id)
     
-    return set_id
+    return set_id, generation_ids
 
 
 def update_notes_in_set(set_id: int, notes: str):
