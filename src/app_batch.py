@@ -190,19 +190,21 @@ class AppBatch:
 
 
     def __run_single_generation(self, input_data):
-        if isinstance(self.generator, MusicVAEGenerator):
-            length = input_data.sequence.get_end_time()
-            note_count = 0
-            bar_count = 1
-            while (note_count < 3 * bar_count):
-                gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)
-                note_count = len(gen_base['sequence'].notes)
-                bar_count = length / 4 # CHECK expecting 4/4 time signature, for 3/4 this number has to be 3
-        elif isinstance(self.generator, MusicRNNGenerator):
-            gen_base = self.generator.generate(primer_sequence=input_data.sequence, length_in_quarters = 16, temperature=self.temperature)
-        else:
-            self.__log("The selected generator is currently not supported.")
-            return
+        length = input_data.sequence.get_end_time()
+        note_count = 0
+        bar_count = 1
+        
+        while (note_count < 3 * bar_count):
+            if isinstance(self.generator, MusicVAEGenerator):
+                gen_base = self.generator.generate(length_in_quarters = 16, temperature=self.temperature)               
+            elif isinstance(self.generator, MusicRNNGenerator):
+                gen_base = self.generator.generate(primer_sequence=input_data.sequence, length_in_quarters = 16, temperature=self.temperature)
+            else:
+                self.__log("The selected generator is currently not supported.")
+                return
+            note_count = len(gen_base['sequence'].notes)
+            bar_count = length / 4 # CHECK expecting 4/4 time signature, for 3/4 this number has to be 3
+
         self.gen_data = MelodyData(note_seq_to_pretty_midi(gen_base['sequence']), SequenceType.GEN_BASE, { 'generation': gen_base['meta'] })
         return self.gen_data
 

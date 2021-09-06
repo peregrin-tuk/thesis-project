@@ -428,7 +428,7 @@ class metrics(object):
         'normalize' : If true, normalize by vector sum.
 
         Returns:
-        'ioi_hist': The output vector has a length of either 12 (or 24 when pause_event is True).
+        'ioi_hist': The output vector has a length of either 12.
         """
 
         pattern = feature['midi_pattern']

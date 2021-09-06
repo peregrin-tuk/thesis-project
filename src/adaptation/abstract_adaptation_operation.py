@@ -9,7 +9,7 @@ class AbstractAdaptationOperation(ABC):
     Adapts x based on y
 
     Attributes:
-        required_analysis (set of functions): set of analysis functions the adaptation operations requires to run.
+        required_analysis (set of functions): set of analysis functions the adaptation operation requires to run.
 
     """
     
@@ -18,6 +18,10 @@ class AbstractAdaptationOperation(ABC):
 
     @abstractmethod
     def execute(self, base: AdaptationMelodyData, control: AdaptationMelodyData):
+        """
+        Executes an adaptation mechanism on the base sequence, using information retrieved from the control sequence.
+        Must call upon completion: super().create_meta_and_update_base(base, self.__class__.__name__, [duration of the adaptation in seconds], adapted_sequence, [results of base sequence analysis])
+        """
         raise NotImplementedError
 
     def create_meta_and_update_base(self, base: AdaptationMelodyData, name: str, duration: float, adapted_sequence: music21.stream.Stream, base_analysis: dict):

@@ -30,11 +30,11 @@ class StartAndEndOnCTOperation(AbstractAdaptationOperation):
         notes = base.sequence.flat.notes
 
         first_ps = find_closest(chord_pitches, notes[0].pitch.ps)
-        last_ps = find_closest(chord_pitches, notes[-0].pitch.ps)
+        last_ps = find_closest(chord_pitches, notes[-1].pitch.ps)
 
         adapted_sequence= base.sequence
         adapted_sequence.flat.notes[0].pitch.ps = first_ps
-        adapted_sequence.flat.notes[-0].pitch.ps = last_ps
+        adapted_sequence.flat.notes[-1].pitch.ps = last_ps
 
         t2 = time.time()
         base_analysis = { pitch_span.__name__: base_span }

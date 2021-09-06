@@ -10,7 +10,7 @@ from src.generation import AbstractGenerator
 _CHECKPOINTS = {
     1: ['attention_rnn',  'ATTENTION'],
     2: ['lookback_rnn', 'LOOKBACK'],
-    2: ['mono_rnn', 'MONO'],
+    3: ['mono_rnn', 'MONO'],
 }
 
 

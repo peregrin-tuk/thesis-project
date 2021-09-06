@@ -1,8 +1,5 @@
 from music21.analysis import metrical
 from music21.stream import Stream
-from pretty_midi import PrettyMIDI
-
-from src.io.conversion import pretty_midi_to_music21
 
 
 def thomassen_melodic_accent(stream: Stream):
@@ -22,7 +19,6 @@ def thomassen_melodic_accent(stream: Stream):
     return melodic_accent
 
 
-# CHECK a a bissl unnötig oder?
 def beat_strength(stream: Stream):
     """
     Returns the beat strength of each note in the sequence.

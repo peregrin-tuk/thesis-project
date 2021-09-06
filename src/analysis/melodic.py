@@ -15,7 +15,7 @@ def ambitus(stream: Stream):
 
 def pitch_span(stream: Stream):
     """
-    Returns the highest and the lowest pitc in the sequence
+    Returns the highest and the lowest pitch in the sequence
 
     Args:
         stream: (music21.stream.Stream): sequence to be analyzed

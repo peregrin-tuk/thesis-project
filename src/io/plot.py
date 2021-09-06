@@ -12,9 +12,9 @@ import plotly.graph_objects as go
 from src.io.conversion import pretty_midi_to_music21, pretty_midi_to_pianoroll_track
 
 
-###############################
-###      OLD PIANOROLLS     ###
-###############################
+#####################################
+###  LEGACY 3RD PARTY PIANOROLLS  ###
+#####################################
 
 def pianoRoll_music21(midi: PrettyMIDI, out: Output = None):
     """
@@ -46,7 +46,6 @@ def pianoroll(midi: PrettyMIDI, out: Output = None, args: dict = None):
 def multitrack_pianoroll(midis: list, names: list = None, out: Output = None, args: dict = None):
     """
     Takes a list of single track pretty midi objects, converts them to a pypianoroll Mutlitrack objects and plots the resulting object.
-    The resolution o
 
     Args:
         midis: list of pretty midi objects with one track each
@@ -70,6 +69,7 @@ def multitrack_pianoroll(midis: list, names: list = None, out: Output = None, ar
     else:
         with out:
             multitrack.plot(**args)
+
 
 ###############################
 ###     EVALUATION BARS     ###
@@ -128,7 +128,6 @@ def two_multibar_plots(left_data: list, left_names: List[str], left_title: str, 
             row=1, col=2
         )
 
-    # TODO Test
     fig.update_yaxes(matches='y')
 
     if headline is not None:
@@ -166,17 +165,20 @@ def __create_evaluation_bar_traces(data: list, names: list, color: list = None):
 ###     CUSTOM PIANOROLL    ###
 ###############################
 
-def plotly_pianoroll(sequence: PrettyMIDI, title: str = None, out: Output = None, pitch_range: List[int] = None, args: dict = None):
+def plotly_pianoroll(sequence: PrettyMIDI, title: str = None, out: Output = None, pitch_range: List[int] = None, args: dict = None, show_velocity: bool = True):
 
     px._core.process_dataframe_timeline = my_process_dataframe_timeline_patch
 
     # pretty midi to dataframe
     df = pd.DataFrame(columns=['start', 'end', 'pitch', 'velocity'])
     for i, note in enumerate(sequence.instruments[0].notes):
-        df.loc[i] = [note.start, note.end, note.pitch, note.velocity]
+        df.loc[i] = [note.start/2, note.end/2, note.pitch, note.velocity]
 
     if args is None: args = {}
-    fig = px.timeline(df, x_start="start", x_end="end", y="pitch", color="velocity", range_y=pitch_range, range_color=[0, 127], title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"}, **args)
+    if show_velocity:
+        fig = px.timeline(df, x_start="start", x_end="end", y="pitch", color="velocity", range_y=pitch_range, range_color=[0, 127], title=title, labels={'pitch': "Pitch", 'velocity': "Velocity"}, **args)
+    else:
+        fig = px.timeline(df, x_start="start", x_end="end", y="pitch", range_y=pitch_range, title=title, labels={'pitch': "Pitch"}, **args)
     fig.layout.xaxis.type = 'linear'
     fig.update_yaxes(dtick=1, showgrid=True)
     fig.update_xaxes(title_text='Time in Bars')

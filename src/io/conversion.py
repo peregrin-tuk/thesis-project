@@ -93,7 +93,7 @@ def pretty_midi_to_music21(midi: PrettyMIDI):
 
         # Find instrument
         try:
-            inst = music21.instrument.instrumentFromMidiProgram(4)
+            inst = music21.instrument.instrumentFromMidiProgram(track.program)
         except music21.exceptions21.InstrumentException:
             inst = music21.instrument.instrumentFromMidiProgram(0)
         part.instrument = inst
