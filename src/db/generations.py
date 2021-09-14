@@ -5,7 +5,10 @@ from sqlite3 import Error
 from datetime import datetime
 from pathlib import Path
 
-from definitions import ROOT_DIR
+from pretty_midi.pretty_midi import PrettyMIDI
+from src.datatypes.call_response_set import CallResponseSet
+
+from definitions import ROOT_DIR, SequenceType
 from src.datatypes.melody_data import MelodyData
 from src.io.output import saveMidiFile
 
@@ -249,6 +252,56 @@ def read_midi(index: int):
     c.row_factory = sqlite3.Row
     c.execute(sql_fetch_mid, (index,))
     return c.fetchone()
+
+
+def read_generation_result_to_cr_set(index: int):
+    """ 
+    Fetches a generation result entry from the database and the corresponding MIDI files from the file system.
+    Returns a CallResponseSet object with the fetched data.
+
+    Args:
+        id (int): row id of the entry
+
+    Returns:
+        CallResponseSet: object containing all information about the generation result
+    """
+    sql_fetch_gen = """SELECT * from generation_results where id = ?"""
+
+    conn = create_connection()
+    c = conn.cursor()
+    c.row_factory = sqlite3.Row
+    c.execute(sql_fetch_gen, (index,))
+    result = c.fetchone()
+
+    input_data = read_midi(result['input_id'])
+    gen_base_data = read_midi(result['gen_base_id'])
+    output_data = read_midi(result['output_id'])
+
+    input_midi = PrettyMIDI(str(midi_dir_path / input_data['midi_file']))
+    gen_base_midi = PrettyMIDI(str(midi_dir_path / gen_base_data['midi_file']))
+    output_midi = PrettyMIDI(str(midi_dir_path / output_data['midi_file']))
+
+    meta = {
+        'generation': {
+            'gen_dur': result['gen_dur'],
+            'model': result['gen_model'],
+            'temperature': result['gen_temperature']
+        },
+        'adaptation': {
+            'steps':  json.loads(result['adapt_steps']),
+            'total_duration': result['adapt_dur']
+        }
+    }
+
+    return CallResponseSet( None,
+                            result['gen_model'] ,
+                            MelodyData(input_midi, input_data['type'], None,  json.loads(input_data['analysis']),  json.loads(input_data['evaluation'])),
+                            MelodyData(gen_base_midi, gen_base_data['type'], meta,  json.loads(gen_base_data['analysis']),  json.loads(gen_base_data['evaluation'])),
+                            MelodyData(output_midi, output_data['type'], meta,  json.loads(output_data['analysis']),  json.loads(output_data['evaluation'])),
+                             json.loads(input_data['analysis']),
+                            json.loads(result['adapt_steps']),
+                            json.loads(gen_base_data['evaluation']),
+                            json.loads(output_data['evaluation']))
 
 
 def dict_values_to_string(dictionary: dict):

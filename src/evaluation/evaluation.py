@@ -93,17 +93,17 @@ class Evaluation():
     def calc_meta_scores(self, evaluation_dict: dict):
         total = 0
         for key, value in evaluation_dict.items():
-            total += value
+            total += float(value)
         avg = total / float(len(evaluation_dict))
 
         total = 0
         for key in self.pitch_related_keys:
-            total += evaluation_dict[key]
+            total += float(evaluation_dict[key])
         pitch_avg = total / float(len(self.pitch_related_keys))
 
         total = 0
         for key in self.rhythm_related_keys:
-            total += evaluation_dict[key]
+            total += float(evaluation_dict[key])
         rhythm_avg = total / float(len(self.rhythm_related_keys))
 
 

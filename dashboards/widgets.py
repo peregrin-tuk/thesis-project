@@ -89,6 +89,21 @@ dbStoreCheckbox = widgets.Checkbox(
 )
 
 
+### LOAD FROM DB ###
+
+exploreHeading = widgets.HTML(
+    value="<h2>Select an entry to load from the database<h2>",
+    placeholder='Enter an ID to load from DB',
+)
+
+databaseIdTextfield = widgets.BoundedIntText(
+    value=1234,
+    min=0,
+    max=100000,
+    step=1,
+    disabled=False,
+    width=80
+)
 
 
 ### BUTTONS ###
@@ -118,6 +133,15 @@ startButton = widgets.Button(
     icon='play',
     layout=button_layout
 )
+
+showButton = widgets.Button(
+    description='  SHOW',
+    disabled=False,
+    button_style='success',
+    icon='search',
+    layout=button_layout
+)
+
 
 ### PAGINATION ###
 

@@ -80,7 +80,7 @@ class AppBatch:
         checkpoint = self.generator_list[generator_id][2]
 
         if generator != self.generator or checkpoint != self.checkpoint:
-            self.__log("Initializing generation model. This may take 10 seconds (RNN) to 5 minutes (VAE)...")
+            self.__log("Initializing generation model. This may take a few seconds (RNN) to 5 minutes (VAE)...")
             self.generator = generator(checkpoint, log=self.log)
             self.checkpoint = checkpoint
 
@@ -140,7 +140,7 @@ class AppBatch:
             adaptation_variance = self.evaluation.evaluate_variance([g.output_sequence.sequence for g in generations])
 
 
-        # TEST calculate average similarity values for generations set and all adaptation sets
+        # calculate average similarity values for generations set and all adaptation sets
         generation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g.generation_similarity for g in generations])
         adaptation_avg_similarity = self.evaluation.calc_avg_from_similarity_dicts([g.output_similarity for g in generations])
         

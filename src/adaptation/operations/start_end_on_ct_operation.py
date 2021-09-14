@@ -22,12 +22,15 @@ class StartAndEndOnCTOperation(AbstractAdaptationOperation):
         base_span = pitch_span(base.sequence)
 
         # get the chord of the control_key at a range around the span of the base sequence
-        # NOTE: if instead just root and fifth should be used [seq_key.getTonic(), seq_key.getDominant()] would do
-        chord = control_key.getChord(base_span[0].transpose(-5), base_span[1].transpose(5))
-        chord_pitches = [pitch.ps for pitch in (chord.root(), chord.third, chord.fifth)] 
+        # NOTE: if instead just root and fifth should be used [control_key.getTonic().name, control_key.getDominant().name] would do and the first line of this segment could be deleted
+        chord = control_key.getChord(control_key.getTonic())
+        scale = control_key.getChord(base_span[0].transpose(-5), base_span[1].transpose(5))
+        chord_pitches = [note.pitch.ps for note in scale if note.pitch.name in (chord.root().name, chord.third.name, chord.fifth.name)] 
 
         # calculate the closest chord tone for the first and the last note
         notes = base.sequence.flat.notes
+        print('CHORD', chord)
+        print('CHORD PITCHES', chord_pitches)
 
         first_ps = find_closest(chord_pitches, notes[0].pitch.ps)
         last_ps = find_closest(chord_pitches, notes[-1].pitch.ps)

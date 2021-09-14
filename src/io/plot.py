@@ -89,7 +89,7 @@ def evaluation_bars(evaluation_values, out: Output = None, color: str = 'lightse
             iplot([fig])
 
 
-def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list = None, color: list = None):
+def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list = None, color: list = None, width: int = None):
     
     if names is None:
         names = []
@@ -100,6 +100,7 @@ def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list
 
     fig = go.Figure(data=traces)
     fig.update_layout(barmode='group')
+    if width is not None: fig.update_layout(width=width)
 
     if out is None:
         fig = go.Figure(fig)
