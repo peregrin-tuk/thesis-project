@@ -201,7 +201,7 @@ def multitrack_plotly_pianoroll(sequences: List[PrettyMIDI], names: List[str], t
     i = 0
     for s, sequence in enumerate(sequences):
         for note in sequence.instruments[0].notes:
-            df.loc[i] = [names[s], note.start, note.end, note.pitch, note.velocity, i]
+            df.loc[i] = [names[s], note.start*2, note.end*2, note.pitch, note.velocity, i]
             i += 1
 
     if args is None: args = {}
