@@ -111,7 +111,6 @@ def multi_evaluation_bars(evaluation_data: list, out: Output = None, names: list
             iplot(fig)
 
 
-# CHECK could abstract to x plots (list with data, nameslist, title) -> for loop, create row for each
 def two_multibar_plots(left_data: list, left_names: List[str], left_title: str, right_data: list, right_names: List[str], right_title: str, headline: str = None, out: Output = None):
     fig = make_subplots(rows=1, cols=2, subplot_titles=[left_title, right_title])
 

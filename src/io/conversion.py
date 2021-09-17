@@ -44,8 +44,6 @@ def mido_to_pretty_midi(melody: mido.MidiFile):
         note_id = 0
         for note in inst.notes:
             muspy_note = tmp.tracks[track_id].notes[note_id]
-            # note.start = pm.tick_to_time(muspy_note.time)
-            # note.end = pm.tick_to_time(muspy_note.time + muspy_note.duration)
             note.start = mido.tick2second(muspy_note.time, melody.ticks_per_beat, mido.bpm2tempo(bpm))
             note.end = mido.tick2second(muspy_note.time + muspy_note.duration, melody.ticks_per_beat, mido.bpm2tempo(bpm))
             note_id += 1
@@ -196,61 +194,3 @@ def music21_to_pretty_midi(stream: Stream, resolution: int = 480):
         midi.instruments.append(instrument)
 
     return midi
-
-
-
-
-
-# CHECK legacy code, not used anymore in application code - delete?
-
-###################################
-###    MONKEY PATCH for muspy   ###
-###################################
-
-
-PITCH_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-
-def _get_pitch_name(note_number: int) -> str:
-    octave, pitch_class = divmod(note_number, 12)
-    return PITCH_NAMES[pitch_class] + str(octave - 1)
-
-def _patched_to_music21(music: muspy.Music):
-
-    # Create a new score
-    score = music21.stream.Score()
-
-    # Tracks
-    for track in music.tracks:
-        # Create a new part
-        part = music21.stream.Part()
-        part.partName = track.name
-
-        # Add tempos
-        for tempo in music.tempos:
-            part.append(muspy.outputs.music21.to_music21_metronome(tempo))
-
-        # Add time signatures
-        for time_signature in music.time_signatures:
-            part.append(muspy.outputs.music21.to_music21_time_signature(time_signature))
-
-        # Add key signatures
-        for key_signature in music.key_signatures:
-            part.append(muspy.outputs.music21.to_music21_key(key_signature))
-
-        # Add notes to part - patched
-        for note in track.notes:
-            m21_note = music21.note.Note(_get_pitch_name(note.pitch))
-            m21_note.quarterLength = note.duration / (float) (music.resolution)
-            m21_note.volume = note.velocity
-            part.append(m21_note)
-            part.notes[-1].offset = note.time / (float) (music.resolution)
-
-        # Append the part to the score
-        score.append(part)
-
-        # Make measures
-        score.makeMeasures()
-
-        return score
-
-muspy.to_music21 = _patched_to_music21

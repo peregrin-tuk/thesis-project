@@ -39,7 +39,7 @@ def key(stream: Stream):
     Returns:
         music21.key.Key: a key object holding all information about the estimated key
     """
-    return stream.analyze('key') # TODO try out different weights and see how they perform (see Journal 18.3.)    
+    return stream.analyze('key') 
 
 
 def smoothed_key_per_bar(stream: Stream, window_size_in_bars: int = 1):

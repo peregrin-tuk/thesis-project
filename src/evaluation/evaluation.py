@@ -27,8 +27,6 @@ class Evaluation():
             return { 'absolute': selection, 'normalized': self.__normalize(selection)}
 
 
-    # CHECK is using similarity normalization / avg distance aussagekräftig oder gibts besseren value?
-    # CHECK currently similarity gets calculated twice (because most likely evaluate_sim was already called before => could be optimised)
     def evaluate_variance(self, sequences: List[PrettyMIDI]):
         """ 
         Takes a list of dictionaries as returned by evaluate_similarity(), calculates the average distance between the values of each feature based on exhaustive cross validation.
@@ -68,8 +66,7 @@ class Evaluation():
         self.normalization_factors = normalization_factors
 
 
-    # CHECK -> evtl. mit variance auch kompatibel machen, indem result_keys dynamisch ausm ersten element in der Liste ermittelt werden
-    # CHECK  evtl. noch Error Handling für unerlaubten Input (list elemente nicht alle gleich)
+
     def calc_avg_from_similarity_dicts(self, lst: List[dict]):
         """ 
         Takes a list of dictionaries as returned by evaluate_similarity(), calculates the average for each feature (both absolute and normalized) and returns a new dcit with the average values.

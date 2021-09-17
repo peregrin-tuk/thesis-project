@@ -6,7 +6,7 @@ from src.io.conversion import music21_to_pretty_midi
 class AbstractAdaptationOperation(ABC):
     """Description
 
-    Adapts x based on y
+    Adapts a "base" sequencex based on a "control" sequence.
 
     Attributes:
         required_analysis (set of functions): set of analysis functions the adaptation operation requires to run.

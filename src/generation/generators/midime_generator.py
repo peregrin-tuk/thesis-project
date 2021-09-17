@@ -34,7 +34,7 @@ class MidiMeGenerator(AbstractGenerator):
         super().__init__()
 
     
-    def trainFromMIDI(self, midis, num_steps=100):
+    def trainFromMIDI(self, midis, num_steps=100, training_set_reference_strings: list = None):
         """
         Trains the MidiMe model based on a list of midi objects.
 
@@ -59,7 +59,7 @@ class MidiMeGenerator(AbstractGenerator):
 
 
 
-    def trainFromTfRecord(self, tfrecord_path, num_steps=100):
+    def trainFromTfRecord(self, tfrecord_path, num_steps=100, training_set_reference_strings: list = None):
         """
         Trains the MidiMe model based on a set of note_sequences serialized to a .tfrecord file.
 
@@ -100,7 +100,11 @@ class MidiMeGenerator(AbstractGenerator):
         )
         t2 = time.time()
         self.train_dur += t2-t1
+
+        self.training_set_references = training_set_reference_strings
+
         print('[GEN] 🎉 Initialization finished in ' + str(t2-t1) + ' sec.')
+        
 
 
     def initializeFromCheckpoint(self, path=train_dir):
@@ -138,7 +142,7 @@ class MidiMeGenerator(AbstractGenerator):
 		        'checkpoint': self.checkpoint,
 		        'temperature':temperature,
                 'training_meta': {
-                    'trained_on': [], # TODO add midi file refs (pass optional array to train() ?)
+                    'trained_on': self.training_set_references,
                     'train_dur': self.train_dur,
                     'steps': self.num_steps
                 }	
@@ -161,7 +165,7 @@ class MidiMeGenerator(AbstractGenerator):
 		        'checkpoint': self.checkpoint,
 		        'temperature':temperature,
                 'training_meta': {
-                    'trained_on': [], # TODO add midi file refs (pass optional array to train() ?)
+                    'trained_on': self.training_set_references,
                     'train_dur': self.train_dur,
                     'steps': self.num_steps
                 }	

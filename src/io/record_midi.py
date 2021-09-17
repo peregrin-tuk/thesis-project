@@ -1,27 +1,3 @@
-# class MidiInput
-
-# Global variables:
-# ✔ default port 
-# ✔ signature (enum - 4/4, 3/4, ..)
-# ✔ tempo (int bpm)
-#    => those two can be used to record a specific number of bars + play a click metronom for the user
-
-# FUNCTIONS
-# ✔ abstract? record (record function only differentiate in their break condition)
-# recordSeconds(int: length in ms)
-        # output: "ready to record"
-        # recording starts when first note is pressed
-# ✔ recordBars(int: length in bars)
-# ✔ recordUntilRest(optional: int: rest length in ms)
-        # if no open note_on event exists + no new event incoming for X ms -> stop recording
-# recordUntilStopped()
-        # records until stopRecording() is called -> could be the general record() function, so all other recordings could also bes stopped
-        # should other recordings be able to be stopped? canceled yes, but stopping and saving the recording midway might lead to unexpected behaviour
-# ✔ recordSingleNote()
-# cancelRecording()
-# playNote() ? (als callback um input zu hören, sollte dann synthesize_input = true/false an init übergeben können)
-
-
 from datetime import datetime
 from pathlib import Path
 import mido
@@ -270,7 +246,6 @@ class MidiInput():
             raise ConnectionError
 
         # add time ticks to msg and append to track
-        # TODO base time ticks on pygame clock (pygame.time.get_ticks() -> sollten Millisekunden sein, dann stimmts mit Metronom zam)
         if msg is not None:
             # play note
             if self.playback:
