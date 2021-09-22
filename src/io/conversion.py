@@ -194,3 +194,10 @@ def music21_to_pretty_midi(stream: Stream, resolution: int = 480):
         midi.instruments.append(instrument)
 
     return midi
+
+
+PITCH_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+def _get_pitch_name(note_number: int) -> str:
+    octave, pitch_class = divmod(note_number, 12)
+    return PITCH_NAMES[pitch_class] + str(octave - 1)
