@@ -209,7 +209,7 @@ tabulate==0.8.7
 tensor2tensor==1.15.7
 tensorboard==1.15.0
 tensorboard-plugin-wit==1.7.0
-tensorflow==1.15.0
+tensorflow==2.5.2
 tensorflow-addons==0.12.0
 tensorflow-cpu @ https://storage.googleapis.com/tensorflow/windows/cpu/tensorflow_cpu-2.4.0-cp37-cp37m-win_amd64.whl
 tensorflow-datasets==3.2.1
